@@ -80,7 +80,7 @@ bool Akeru::isReady() {
 	// You've been warned!
 
     unsigned long currentTime = millis();
-    if(currentTime >= _lastSend && (currentTime - _lastSend) <= 60000) {
+    if(currentTime >= _lastSend && ((unsigned long)(currentTime - _lastSend) <= 60000UL)) {
         return false;
     }
 
@@ -97,9 +97,9 @@ bool Akeru::isReady() {
 bool Akeru::send(const void* data, uint8_t len) {
 	uint8_t* bytes = (uint8_t*)data;
 
-    if(!isReady()) {
+/*    if(!isReady()) {
         return false;
-    }
+    } */
 
     // See comment in isReady()
     _lastSend = millis();
@@ -191,7 +191,32 @@ bool Akeru::setPower(uint8_t power) {
     _serial.write(power);
     _serial.write((uint8_t)';');
 
-    return _nextReturn() == OK;
+    char dataRX[5] = "";
+    int  length    = 3;
+    int  timeout   = 50;
+    int  bread     = 0;
+
+    long previousMillis = millis();
+    while((millis()-previousMillis)<timeout)
+    {
+        if(_serial.available()>0)
+        {
+            char c = _serial.read();
+            if(bread>length)
+            {
+                return(-1); // string received is too long
+            }
+            else
+            {
+                dataRX[bread]=c;
+            }
+            if (c == 'O') bread++;
+            if (c == 'K') break;
+        }
+    }
+    if (strcmp (dataRX,"OK") != 0) return false; else return true;
+
+    //return _nextReturn() == OK;
 }
 
 uint8_t Akeru::_nextReturn() {
