@@ -1,0 +1,24 @@
+#######################################
+# Syntax Coloring Map for Akeru
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Akeru	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+isReady	KEYWORD2
+send	KEYWORD2
+getRev	KEYWORD2
+getId	KEYWORD2
+setPower	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

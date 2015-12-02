@@ -1,0 +1,62 @@
+/*  This file is part of NazaCanDecoderSigfox.
+ 
+ HidnSeek is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as published
+ by the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ HidnSeek is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
+
+// EEPROM map
+// byte 0: today
+// byte1-31: number of messages sent
+// byte32: number of messages this hour
+// byte33-39:cent/year/month/day/hour/min/sec of last message
+// byte40-41:battery calibration
+
+void stepMsg()
+{
+  if (day > 0) {
+    if (day != today) { // Reset or new day
+      today = EEPROM.read(0);
+      if (today != day) { // New day
+        if (today < 32) EEPROM.write(today,MsgCount);
+        EEPROM.write(0, day);
+        EEPROM.write(day, 0);
+        today = day;
+        MsgCount = 0;
+      }
+    }
+    MsgCount++;
+  }
+}
+
+void saveEEprom() {
+  if (today > 0 && today < 32) {
+    EEPROM.write(today,MsgCount);
+  }
+}
+
+void dumpEEprom() {
+  today = EEPROM.read(0);
+  serialString(PSTR("Last day:"));
+  Serial.println(today);
+  serialString(PSTR("Usage per days:"));
+  for (int i = 1; i < 32; i++) {
+    MsgCount = EEPROM.read(i);
+    if(MsgCount==255) {
+      EEPROM.write(i, 0);
+      MsgCount=0;
+    }
+    Serial.print(MsgCount);
+    Serial.print(" ");
+  }
+  MsgCount = EEPROM.read(today);
+  Serial.println("");
+}
