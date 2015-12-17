@@ -14,4 +14,4 @@ Eagle libray for the HidnSeek and droneRescue Projects
 # Telecom Design breakout board
 schematic and layout for Eagle software
 
-![3D Model](https://github.com/garfield38/hidnseek/blob/master/eagle/cc-by-nc-sa.png)
+![3D Model](https://github.com/hidnseek/hidnseek/blob/master/eagle/cc-by-nc-sa.png)
