@@ -8,5 +8,5 @@
 * Several months autonomous
 * Rechargeable and monitored battery
 * Firmware update with onchip USB interface
-* Geo Fencing with [Apple iOS](https://itunes.apple.com/fr/app/hidnseek/id1014592720?mt=8) and Android Application
+* Geo Fencing with [Apple iOS](https://itunes.apple.com/fr/app/hidnseek/id1014592720?mt=8) and [Android](https://play.google.com/apps/testing/com.hidnseek.hidnseek) Application
 * GPIOs available for future extensions (i2c, Serial, ISP, Analog input, Digital)
