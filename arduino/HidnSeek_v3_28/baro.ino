@@ -34,7 +34,7 @@ bool bmp180Measure(float *Temp, float *Press)
 
   status = pressure.getTemperature(T);
   if (status == 0) return false;
-  if (Temp) *Temp = T - 4.0;
+  if (Temp) *Temp = T - 3.6;
   status = pressure.startPressure(3);
 
   if (status == 0) return false;
@@ -43,7 +43,10 @@ bool bmp180Measure(float *Temp, float *Press)
 
   // Retrieve the completed pressure measurement:
   status = pressure.getPressure(a, T);
-  if (status != 0) if (Press) *Press = a;
+  if (status != 0) if (Press) {
+      *Press = a;
+      airPlanePress = a < 880 ? true : false;
+    }
   return true;
 }
 

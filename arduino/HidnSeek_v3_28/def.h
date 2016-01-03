@@ -17,6 +17,21 @@
 #define ACCEL_TRIG 40
 #define ACCEL_FLAT 10
 
+#define BATT_MIN 3570
+#define BATT_MAX 4200
+
+// EEPROM map
+#define ADDR_TODAY 0
+#define ADDR_SENT 1
+// byte1-31: number of messages sent
+#define ADDR_HOUR 32
+// byte32: number of messages this hour
+#define ADDR_LAST 33
+// byte33-39:cent/year/month/day/hour/min/sec of last message
+// byte40-41:battery calibration
+#define ADDR_CAL_LOW  40
+#define ADDR_CAL_HIGH 41
+
 #define MsgMax     140   // 12 messages can be sent per hour.
 #define MOTION_MIN_NUMBER 2
 #define PMTK_SET_NMEA_OUTPUT_RMCONLY "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*" // 29"
@@ -33,7 +48,7 @@
 #define PMTK_ENABLE_WAAS "$PMTK301,2*" // 2E"
 
 enum {
-  MSG_POSITION = 0, MSG_CE_CW = 3, MSG_NO_MOTION = 4, MSG_NO_GPS = 5,
+  MSG_POSITION = 0, MSG_SPORT = 3, MSG_NO_MOTION = 4, MSG_NO_GPS = 5,
   MSG_MOTION_ALERT = 6, MSG_WEAK_BAT = 7
 };
 
@@ -71,37 +86,51 @@ enum {
 
 unsigned char buffer[32];
 
-unsigned long fix_age, date, time, chars = 0;
-int year;
-byte month, day, hour, minute, second, hundredths;
+unsigned long fix_age = 0;
+int year = 0;
+byte month, day, hour, minute, second, hundredths = 0;
 byte msgs = 0;
 boolean modemPresent = false;
 boolean accelPresent = false;
 boolean baromPresent = false;
 boolean GPSactive = true;
 
-unsigned long loopCW = millis();
+// For automatic airplane mode detection
+boolean highSpeed     = false;
+boolean airPlaneMode  = false;
+boolean airPlaneSpeed = false;
+boolean airPlanePress = false;
+
+unsigned int loopGPS = 0;
+unsigned long startCW = 0;
+
+#define limitSport 48
+unsigned long debugSport = 0;
+boolean forceSport = false;
+unsigned long loopSport = 0;
+
 unsigned long start = millis();
 unsigned long timer = millis();
 unsigned long fixTime = millis();
 uint8_t today = 0;
 uint8_t MsgCount = 0;
 
+byte accelPosition;
 int detectMotion = 1;
-int waitLoop = 80;
-int batteryValue;
-int batteryCharge;
-int batteryLow = 3570;
-int syncSat = 0;
-int noSat = 0;
+unsigned int batteryValue;
 byte batteryPercent = 0;
-int wakeMsgs = 0;
+
+unsigned int alt = 0;
+unsigned int spd = 0;
+unsigned int sat = 0;
+unsigned int syncSat = 0;
+unsigned int noSat = 0;
 
 float previous_lat = 0;
 float previous_lon = 0;
 
 // BMP180 measurements
-float Temp, Press, p0;
+float Temp, Press;
 
 // 12 octets = 96 bits payload
 // lat: 32, lon: 32, alt: 13 , spd: 7, bat: 7, mode: 3, cap: 2

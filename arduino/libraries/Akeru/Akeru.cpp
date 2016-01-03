@@ -160,7 +160,7 @@ unsigned long Akeru::getID() {
     uint8_t response[8] = {0};
     uint8_t i = 0;
     while(!_serial.available());
-    while(_serial.peek() != ';') {
+    while(_serial.peek() != ';' || i<6) {
         response[i] = _serial.read();
         while(!_serial.available());
         ++i;
@@ -170,7 +170,8 @@ unsigned long Akeru::getID() {
     unsigned long id = 0;
 
     for(uint8_t j = 0; j < i-2; ++j) {
-        id += response[j] << ((i-3-j) * 8);
+        //id += response[j] << ((3-j) * 8);
+        id = (id << 8) + response[j];
     }
 
     return id;

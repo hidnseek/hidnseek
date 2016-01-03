@@ -13,7 +13,6 @@
 
  HidnSeek by StephaneD 20150313 Not for commercial use              */
 
-#include "avr/pgmspace.h"
 #include "SoftwareSerial.h"
 #include "LowPower.h"
 #include "Akeru.h"
@@ -43,10 +42,6 @@ void serialString (PGM_P s) {
   while ((c = pgm_read_byte(s++)) != 0)
     Serial.print(c);
 }
-
-// TODO Maintenance message checkout on start
-// TODO Request downlink the configuration after the dance on reboot
-// TODO Shake to send immediate alert
 
 void initGPIO()
 {
@@ -109,59 +104,76 @@ void flashRed() {
 void NoflashRed() {
   delay(25);
   digitalWrite(redLEDpin, LOW);
+  if (forceSport) digitalWrite(bluLEDpin, LOW);
   delay(50);
   digitalWrite(redLEDpin, HIGH);
+  if (forceSport) digitalWrite(bluLEDpin, HIGH);
 }
 
 int powerDownLoop(int msgs) {
   if (batterySense()) shutdownSys(); else digitalWrite(shdPin, HIGH);
-  //if (batteryValue < min(985, batteryCharge) || (msgs == MSG_NO_MOTION)) gpsStandby();
-  if (batteryPercent < 95) gpsStandby(); else gpsInit();
-  batteryCharge = batteryValue + 5;  // Add 20mV hysterisis
-  if (syncSat < 255) sendSigFox(msgs); // if not arround previous location send new position
-  syncSat = 0;
-  unsigned int i = 0;
+  if (forceSport) {
+    if ((batteryPercent < 25) || (debugSport++ >= limitSport)) {
+      //serialString(PSTR("Sport Limit")); Serial.println();
+      forceSport = false;
+    }
+  } else gpsStandby();
+
+  if (syncSat < 255) {
+    sendSigFox(msgs); // if not arround previous location send new position
+  }
+
+  accelStatus(); // record the current angle
   detectMotion = 0;
-  accelStatus(); // record the current position
   // Loop duration 8s. 75x 10mn, 150x 20mn,
   static uint8_t countNoMotion;
   if (msgs != MSG_NO_MOTION) countNoMotion = 0;
   unsigned int waitLoop;
-  switch (msgs) {
-    case MSG_NO_GPS:  // 20mn loop
-      waitLoop = 38; // 150;
-      break;
-    case MSG_NO_MOTION:
-      waitLoop = 420 << countNoMotion; // 450=1h loop, ajusted to 420 on 24/11/15
-      if (++countNoMotion > 3) countNoMotion = 3;
-      break;
-    default:
-      waitLoop = 38;  // 5mn loop
-      break;
+  if (msgs == MSG_NO_MOTION) {
+    waitLoop = 410 << countNoMotion; // 450=1h loop, ajusted to 410 on 13/12/15 420 on 24/11/15
+    hour += (1 << countNoMotion);
+    if (hour > 23) {
+      hour = 0;
+      day++;
+    }
+    if (day > 31) {
+      day = 0;
+      month++;
+    }
+    if (month > 12) {
+      month = 0;
+      year++;
+    }
+    if (countNoMotion < 3) countNoMotion++;
+  } else {
+    waitLoop = (forceSport ? 38 : 75) - (loopGPS >> 3);  // 10mn loop: 6mn sleep + 4mn for GPS
   }
   Serial.flush();
+  boolean modeSport = forceSport;
+  unsigned int i = 0;
   while (i < waitLoop) {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
     digitalWrite(redLEDpin, HIGH);
+    if (forceSport) digitalWrite(bluLEDpin, HIGH);
     if (GPSactive) {
       batterySense();
-      if (batteryPercent < 95) gpsStandby();
+      if (batteryPercent < 98 && !forceSport) gpsStandby();
     }
     if (accelStatus()) { // device moved
       if (GPSactive) NoflashRed(); else delay(50);
       detectMotion++;
-      waitLoop = (msgs == MSG_NO_MOTION) ? 0 : 38;                         // exit immediatly or stay in 5mn loop
+      waitLoop = (msgs == MSG_NO_MOTION || modeSport != forceSport) ? 0 : 38; // exit immediatly or stay in 5mn loop
     }
     if (i == 38 && detectMotion == 0 && msgs != MSG_NO_MOTION) i = waitLoop;  // Exit and enter in no motion mode
     i++;
+    digitalWrite(bluLEDpin, LOW);
     digitalWrite(redLEDpin, LOW);
   }
-  detectMotion = (detectMotion > MOTION_MIN_NUMBER) ? 1 : 0;
+  detectMotion = (detectMotion > MOTION_MIN_NUMBER || forceSport) ? 1 : 0;
   if (msgs == MSG_NO_MOTION && i > waitLoop) detectMotion = -1; // This mean a motion after a while
-  if (detectMotion > 0) GPSactive = gpsInit();
-  start = millis();
-  loopCW = millis();
-  noSat = 0;
+  if (detectMotion > 0 && !forceSport) GPSactive = gpsInit();
+  start = startCW = millis();
+  loopGPS = syncSat = noSat = 0;
   return detectMotion;
 }
 
@@ -176,8 +188,8 @@ int main(void)
   Serial.println();
   serialString(PSTR("Firmware " __FILE__ "\nRelease " __DATE__ " " __TIME__));
   Serial.println();
-  serialString(PSTR("TinyGPS lib v. "));
-  Serial.println(TinyGPS::library_version());
+  //serialString(PSTR("TinyGPS lib v. "));
+  //Serial.println(TinyGPS::library_version());
 
   dumpEEprom();
 
@@ -185,7 +197,6 @@ int main(void)
   batterySense();
   serialString(PSTR("Init batterie reg: "));
   Serial.println(batteryValue);
-  batteryCharge = batteryValue + 1;  // Add 4mV hysterisis
   delay(100);
   if (GPSactive = gpsInit()) {
     gpsCmd(PSTR(PMTK_VERSION));
@@ -210,38 +221,45 @@ int main(void)
     delay(500);
     flashRed(4);
   } else {
+    digitalWrite(bluLEDpin, HIGH);
     Serial.flush();
-    delay(100);
-
+    delay(500);
     digitalWrite(shdPin, LOW);
-    delay(100);
+    delay(1000);
   }
 
   serialString(PSTR("free Ram: "));
   Serial.println(freeRam());
 
-  while (1) {
-    // when millis() or start timer wraps around after low power, we'll just reset it
-    if (start > millis())  start = millis();
+  start = startCW = millis();
 
-    if (millis() - loopCW > 8000) {
+  while (1) {
+
+    if ((uint16_t) (millis() - startCW) >= 8000 || loopGPS % 8 == 0) {
       digitalWrite(bluLEDpin, HIGH);
       delay(100);
       accelStatus();
       digitalWrite(bluLEDpin, LOW);
-      loopCW = millis();
+      startCW = millis();
     }
 
+    /*
+        if (!forceSport) if ((uint16_t) (millis() - start) > 3000) {
+            forceSport = true;
+            debugSport = 0;
+            gpsInit();
+            flashRed(8);
+          }
+    */
+
     // if a sentence is received, we can check the checksum, parse it...
-    if (detectMotion == 1 && gpsProcess()) {
-      if (syncSat > 30) {
-        detectMotion = powerDownLoop(MSG_POSITION);
-      }
+    if (detectMotion == 1) {
+      if (gpsProcess()) LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
     }
 
     // Let 4mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
     // Reduce the delay to 2mn if no satellites are visible
-    if ((millis() - start > 240000) || noSat > 120) {
+    if (( (unsigned long)(millis() - start) >= 120000) || syncSat >= 30 || loopGPS >= 240 || noSat >= 120) {
       detectMotion = powerDownLoop(noSat == 0 ? MSG_POSITION : MSG_NO_GPS);
     }
 
@@ -249,3 +267,4 @@ int main(void)
     if (detectMotion == -1) detectMotion = powerDownLoop(MSG_MOTION_ALERT); // Alert for Motion detected after the blank time
   }
 }
+

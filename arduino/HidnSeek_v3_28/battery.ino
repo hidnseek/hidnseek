@@ -18,8 +18,8 @@
 unsigned int sensorMax;
 
 void initSense() {
-  byte lowByte = EEPROM.read(40);
-  byte highByte = EEPROM.read(41);
+  byte lowByte = EEPROM.read(ADDR_CAL_LOW);
+  byte highByte = EEPROM.read(ADDR_CAL_HIGH);
   sensorMax = ((lowByte << 0) & 0xFF) + ((highByte << 8) & 0xFF00);
   serialString(PSTR("SensorMax "));
   if (sensorMax < 980 || sensorMax > 1023) {
@@ -33,18 +33,18 @@ unsigned int calibrate(unsigned int sensorValue) {
   // record the maximum sensor value
   byte lowByte = ((sensorValue >> 0) & 0xFF);
   byte highByte = ((sensorValue >> 8) & 0xFF);
-  EEPROM.write(40, lowByte);
-  EEPROM.write(41, highByte);
+  EEPROM.write(ADDR_CAL_LOW, lowByte);
+  EEPROM.write(ADDR_CAL_HIGH, highByte);
   return sensorValue;
 }
 
 #define NUM_READS 100
 bool batterySense() {
   digitalWrite(rstPin, HIGH);
+  analogReference(EXTERNAL);
   delay(100); // RC need 30ms
   // read multiple values and sort them to take the median value. Require 24ms
   uint8_t sortedValues[NUM_READS];
-  analogReference(EXTERNAL);
   for (uint8_t i = 0; i < NUM_READS; i++) {
     uint8_t value = analogRead(sensorBatt) >> 2;
     uint8_t j;
@@ -67,18 +67,16 @@ bool batterySense() {
   }
   batteryValue = 0;
   //return scaled mode of 3 values
-  for (uint8_t i = NUM_READS/2-4;i<(NUM_READS/2+4); i++) {
+  for (uint8_t i = NUM_READS / 2 - 4; i < (NUM_READS / 2 + 4); i++) {
     batteryValue += sortedValues[i];
   }
   batteryValue = batteryValue >> 1;
 
   if (batteryValue > sensorMax) sensorMax = calibrate(batteryValue);
-  unsigned int bat = map(batteryValue, 0, sensorMax, 0, 4200); // represent the battery voltage
-  batteryPercent = map(bat, min(bat,batteryLow), max(bat,4200), 0, 100);
-  p.cpx &= ~( 127 << 3); // bat (7bits)
-  p.cpx |= (uint32_t) ( 127 & batteryPercent) << 3; // bat (7bits)
-  digitalWrite(rstPin, GPSactive ? HIGH : LOW);
-  return (bat < batteryLow);
+  unsigned int bat = map(batteryValue, 0, sensorMax, 0, BATT_MAX); // represent the battery voltage
+  batteryPercent = map(bat, min(bat, BATT_MIN), max(bat, BATT_MAX), 0, 100);
+  digitalWrite(rstPin, (forceSport || GPSactive) ? HIGH : LOW);
+  return (bat < BATT_MIN);
 }
 
 void shutdownSys() { // 3.57V on battery voltage

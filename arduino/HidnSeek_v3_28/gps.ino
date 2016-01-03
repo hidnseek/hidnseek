@@ -29,8 +29,8 @@ bool gpsInit()
 {
   boolean GPSready = false;
   digitalWrite(rstPin, HIGH);
-  long startloop = millis();
-  while (millis() - startloop < 6000 ) {
+  unsigned long startloop = millis();
+  while ((uint16_t) (millis() - startloop) < 6000 ) {
     if (Serial.available() > 0 && Serial.read() == '*') {
       GPSready = true;
       break;
@@ -61,7 +61,7 @@ bool gpsProcess()
   {
     if (Serial.available() > 0) {
       newSerialData = true;
-      waitime = 200;
+      waitime = 100;
       start = millis();
       digitalWrite(redLEDpin, HIGH);
     }
@@ -74,24 +74,28 @@ bool gpsProcess()
         newGpsData = true;
       }
     }
-    digitalWrite(redLEDpin, LOW);
   }
+
+  // Check if NMEA packet received, wake up GPS otherwise
+  if (!newSerialData) gpsInit();
+
+  // 12 octets = 96 bits payload
+  // lat: 32, lon: 32, alt: 13 , spd: 7, cap: 2, bat: 7, mode: 3 (0-3 sat view, more is MSG)
+  // lat: 32, lon: 32, alt:0-8191m, spd:0-127Km/h, bat:0-100%, mode:0-7, cap: N/E/S/W
+  // int is 16 bits, float is 32 bits. All little endian
 
   gps.crack_datetime(&year, &month, &day, &hour, &minute, &second, &hundredths, &fix_age);
 
   if (newGpsData) { // computeData
     gps.f_get_position(&p.lat, &p.lon, &fix_age);
-    serialString(PSTR("lat="));
-    Serial.print(p.lat, 7);
-    serialString(PSTR(", lon="));
-    Serial.print(p.lon, 7);
-    serialString(PSTR(", syncSat="));
-    Serial.print(syncSat);
-    serialString(PSTR(", fix age="));
-    Serial.println(fix_age);
+    if (fix_age == TinyGPS::GPS_INVALID_AGE || fix_age > 5000) fix_age = 1024;
+    sat = gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites();
+    alt = abs(round(gps.f_altitude()));
+    spd = round(gps.f_speed_kmph());
+
     distance = 1000;
-    if (fix_age == TinyGPS::GPS_INVALID_AGE || fix_age > 5000) {
-      newGpsData = false; // No fix detected
+    if (fix_age >> 9) {
+      newGpsData = false; // No a real fix detected
       p.lat = previous_lat;
       p.lon = previous_lon;
       serialString(PSTR("recover lat="));
@@ -99,21 +103,10 @@ bool gpsProcess()
       serialString(PSTR(", lon="));
       Serial.println(p.lon, 7);
     } else if (abs(p.lat) > 2 && abs(p.lon) > 2) distance = gps.distance_between(p.lat, p.lon, previous_lat, previous_lon);
-    if (newGpsData && distance < 25 && syncSat > 20) {
+    if (newGpsData && distance < 15 && syncSat > 20) {
       syncSat = 255;
     }
 
-    unsigned int alt = abs(round(gps.f_altitude()));
-    if (alt > 8191) alt = 8191;
-    p.cpx = (uint32_t) alt << 19;
-    unsigned int spd = round(gps.f_speed_kmph());
-    if (spd > 90) spd = (int)(spd / 3) + 60;
-    if (spd > 126) spd = 127;
-    p.cpx |= (uint32_t) spd << 12; // send in Km/h
-    p.cpx |= (uint32_t) ( (gps.course() / 90) % 4) << 10;  // send N/E/S/W
-    p.cpx |= (uint32_t) ( 127 & batteryPercent) << 3; // bat (7bits)
-    int sat = gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites();
-    p.cpx |= (uint32_t) ( 3 & int(sat / 4)); // sat range is 0 to 14
     if (newGpsData) {
       if (sat > 3 && abs(p.lat) > 2 && abs(p.lon) > 2) {
         noSat = 0;
@@ -126,37 +119,94 @@ bool gpsProcess()
   }
   else noSat++;
 
-  print_date();
-  serialString(PSTR("sat="));
-  Serial.print(gps.satellites());
-  serialString(PSTR(", noSat="));
-  Serial.print(noSat);
-  serialString(PSTR(", syncSat="));
-  Serial.println(syncSat);
+  //printData(newGpsData); // For debug purpose use 2Ko of flash
 
-  return newGpsData;
-}
-
-static void print_int(unsigned long val, unsigned long invalid, int len)
-{
-  char sz[32];
-  if (val == invalid)
-    strcpy(sz, "*******");
-  else
-    sprintf(sz, "%ld", val);
-  sz[len] = 0;
-  for (int i = strlen(sz); i < len; ++i)
-    sz[i] = ' ';
-  if (len > 0)
-    sz[len - 1] = ' ';
-  Serial.print(sz);
+  digitalWrite(redLEDpin, LOW);
+  loopGPS++;
+  return newSerialData;
 }
 
 void print_date()
 {
-  char sz[32];
-  sprintf(sz, "%02d/%02d/%02d %02d:%02d:%02d   ",
+  char sz[24];
+  sprintf(sz, "%02d/%02d/%02d %02d:%02d:%02d ",
           month, day, year, hour, minute, second);
   Serial.print(sz);
-  print_int(fix_age, TinyGPS::GPS_INVALID_AGE, 5);
 }
+
+void printData(bool complete) {
+  print_date();
+  serialString(PSTR("fix="));
+  Serial.print(fix_age);
+  if (complete) {
+    serialString(PSTR(", lat="));
+    Serial.print(p.lat, 7);
+    serialString(PSTR(", lon="));
+    Serial.print(p.lon, 7);
+    serialString(PSTR(", alt="));
+    Serial.print(alt);
+    serialString(PSTR(", cap="));
+    Serial.print((gps.course() / 90) % 4);
+    serialString(PSTR(", spd="));
+    Serial.print(spd);
+    serialString(PSTR(", sat="));
+    Serial.print(sat);
+  }
+  if (GPSactive) serialString(PSTR(", GPS "));
+  if (forceSport) {
+    serialString(PSTR(", sport="));
+    Serial.print(debugSport);
+  }
+  serialString(PSTR(", bat="));
+  Serial.print(batteryPercent);
+  serialString(PSTR("%, noSat="));
+  Serial.print(noSat);
+  serialString(PSTR(", syncSat="));
+  Serial.println(syncSat);
+}
+
+void makePayload() {
+  if (sat > 3) {
+    if (spd > 120 && alt > 1250) {
+      airPlaneSpeed = true;  // Abort GPS message if Airplane detected
+      syncSat = 255;
+    }
+    if (spd < 120) airPlaneSpeed = false;
+  }
+
+  if (alt > 8191) alt = 8191;
+  if (spd > 90) spd = (int)(spd / 3) + 60;
+  if (spd > 126) spd = 127;
+
+  p.cpx = (uint32_t) alt << 19;
+  p.cpx |= (uint32_t) spd << 12; // send in Km/h
+  p.cpx |= (uint32_t) ( (gps.course() / 90) % 4) << 10;  // send N/E/S/W
+  p.cpx |= (uint32_t) ( 127 & batteryPercent) << 3; // bat (7bits)
+  p.cpx |= (uint32_t) ( 3 & int(sat / 4)); // sat range is 0 to 14
+}
+
+void decodPayload() {
+  unsigned int alt_ = p.cpx >> 19;
+  unsigned int cap_ = (p.cpx >> 10) & 3;
+  unsigned int spd_ = (p.cpx >> 12) & 127;
+  unsigned int bat_ = (p.cpx >> 3) & 127;
+  unsigned int mod_ = p.cpx & 7;
+  print_date();
+  serialString(PSTR("msg="));
+  Serial.print(MsgCount);
+  serialString(PSTR(" lat="));
+  Serial.print(p.lat, 7);
+  serialString(PSTR(", lon="));
+  Serial.print(p.lon, 7);
+  serialString(PSTR(", alt="));
+  Serial.print(alt_);
+  serialString(PSTR(", cap="));
+  Serial.print(cap_);
+  serialString(PSTR(", spd="));
+  Serial.print(spd_);
+  serialString(PSTR(", bat="));
+  Serial.print(bat_);
+  serialString(PSTR(", mode="));
+  Serial.println(mod_);
+}
+

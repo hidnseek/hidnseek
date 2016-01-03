@@ -15,7 +15,6 @@
 
 bool initMems() {
   serialString(PSTR("Init Mems:"));
-
   Wire.begin();
   accel.begin(false, ACCEL_MODE);
   if (accel.update() != 0) {
@@ -28,12 +27,6 @@ bool initMems() {
     Serial.println();
     return true;
   }
-  //accel.initMotion();
-}
-
-void accelMotion() {
-  detectMotion++;
-  flashRed(1);
 }
 
 bool accelStatus() {
@@ -54,7 +47,6 @@ bool accelStatus() {
     z = accel.getZ();
 
     if (accelMove) { // Compute accelDance on move
-      static byte accelPosition;
       byte newPosition;
       if      (abs(x) < ACCEL_FLAT && abs(y) < ACCEL_FLAT && z > ACCEL_TRIG) newPosition = POS_FACE_UP;
       else if (abs(x) < ACCEL_FLAT && abs(y) < ACCEL_FLAT && z < -ACCEL_TRIG) newPosition = POS_FACE_DN;
@@ -84,6 +76,7 @@ bool accelStatus() {
       }
       else seq = 0;
       accelPosition = newPosition;
+      //digitalWrite(chg500mA,accelPosition == POS_FACE_UP ? LOW : HIGH);
       if (seq == 3) { // seq == 3
         saveEEprom();
         flashRed(20);
@@ -96,8 +89,12 @@ bool accelStatus() {
         seq = 0;
       }
       if (seq == 4) {
-        detectMotion = detectMotion + MOTION_MIN_NUMBER + 1;
-        flashRed(8);
+        if (MsgCount < 90) {
+          forceSport = true;
+          debugSport = 0;
+          if (!GPSactive) gpsInit();
+          flashRed(8);
+        }
         seq = 0;
       }
     }
