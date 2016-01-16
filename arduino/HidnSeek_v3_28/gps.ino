@@ -119,10 +119,9 @@ bool gpsProcess()
   }
   else noSat++;
 
-  //printData(newGpsData); // For debug purpose use 2Ko of flash
+  //printData(newGpsData); // For debug purpose this use 2Ko of flash program
 
   digitalWrite(redLEDpin, LOW);
-  loopGPS++;
   return newSerialData;
 }
 
@@ -209,4 +208,3 @@ void decodPayload() {
   serialString(PSTR(", mode="));
   Serial.println(mod_);
 }
-

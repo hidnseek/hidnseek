@@ -27,8 +27,8 @@ TinyGPS gps;
 #include "MMA8653.h"
 MMA8653 accel;
 
-#include <SFE_BMP180.h>
-SFE_BMP180 pressure;
+#include "Barometer.h"
+Barometer bmp180;
 
 int freeRam () {
   extern int __heap_start, *__brkval;
@@ -146,7 +146,7 @@ int powerDownLoop(int msgs) {
     }
     if (countNoMotion < 3) countNoMotion++;
   } else {
-    waitLoop = (forceSport ? 38 : 75) - (loopGPS >> 3);  // 10mn loop: 6mn sleep + 4mn for GPS
+    waitLoop = 75 - loopGPS;  // 10mn loop: 6mn sleep + 4mn for GPS
   }
   Serial.flush();
   boolean modeSport = forceSport;
@@ -188,8 +188,6 @@ int main(void)
   Serial.println();
   serialString(PSTR("Firmware " __FILE__ "\nRelease " __DATE__ " " __TIME__));
   Serial.println();
-  //serialString(PSTR("TinyGPS lib v. "));
-  //Serial.println(TinyGPS::library_version());
 
   dumpEEprom();
 
@@ -207,7 +205,9 @@ int main(void)
     if (accelStatus()) flashRed(2);
   }
 
-  if (baromPresent = pressure.begin()) {
+  bmp180.init();
+
+  if (true) { //baromPresent = pressure.begin()) {
     delay(500);
     bmp180Measure(&Temp, &Press);
     bmp180Print();
@@ -231,26 +231,21 @@ int main(void)
   serialString(PSTR("free Ram: "));
   Serial.println(freeRam());
 
+  // Change charge current to 250mA Not recommanded if connected to a computer, use with wall adapter only.
+  //digitalWrite(chg500mA, HIGH);
+
   start = startCW = millis();
 
   while (1) {
 
-    if ((uint16_t) (millis() - startCW) >= 8000 || loopGPS % 8 == 0) {
+    if ((uint16_t) (millis() - startCW) >= 8000) {
       digitalWrite(bluLEDpin, HIGH);
       delay(100);
       accelStatus();
       digitalWrite(bluLEDpin, LOW);
+      loopGPS++;
       startCW = millis();
     }
-
-    /*
-        if (!forceSport) if ((uint16_t) (millis() - start) > 3000) {
-            forceSport = true;
-            debugSport = 0;
-            gpsInit();
-            flashRed(8);
-          }
-    */
 
     // if a sentence is received, we can check the checksum, parse it...
     if (detectMotion == 1) {
@@ -259,7 +254,7 @@ int main(void)
 
     // Let 4mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
     // Reduce the delay to 2mn if no satellites are visible
-    if (( (unsigned long)(millis() - start) >= 120000) || syncSat >= 30 || loopGPS >= 240 || noSat >= 120) {
+    if (( (unsigned long)(millis() - start) >= 120000) || syncSat >= 30 || loopGPS >= 30 || noSat >= 120) {
       detectMotion = powerDownLoop(noSat == 0 ? MSG_POSITION : MSG_NO_GPS);
     }
 
@@ -267,4 +262,3 @@ int main(void)
     if (detectMotion == -1) detectMotion = powerDownLoop(MSG_MOTION_ALERT); // Alert for Motion detected after the blank time
   }
 }
-

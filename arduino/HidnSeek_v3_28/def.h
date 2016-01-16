@@ -130,7 +130,8 @@ float previous_lat = 0;
 float previous_lon = 0;
 
 // BMP180 measurements
-float Temp, Press;
+float Temp;
+unsigned int Press;
 
 // 12 octets = 96 bits payload
 // lat: 32, lon: 32, alt: 13 , spd: 7, bat: 7, mode: 3, cap: 2
@@ -146,6 +147,9 @@ Payload;
 Payload p;
 
 /* Hardware and Software Changes Log
+
+ 2016-01-14
+ - Use new barometer library from seeedstudio and save 1Kb of flash program space
 
  2015-10-08
  - Fix standby current excessive consumption from 2mA to 0,2mA (D5)

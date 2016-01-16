@@ -13,40 +13,15 @@
  You should have received a copy of the GNU General Public License
  along with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
 
-
 #define ALTITUDE 252.0 // Altitude of HidnSeek's HQ in Grenoble in meters
 
-bool bmp180Measure(float *Temp, float *Press)
+bool bmp180Measure(float *Temp, unsigned int *Press)
 {
-  char status;
-  double T, a;
-
-  //unsigned int alt = round(gps.f_altitude());
-
-  status = pressure.startTemperature();
-  if (status == 0) return false;
-  // Wait for the measurement to complete:
-  delay(status);
-
-  // Retrieve the completed temperature measurement:
-  // Note that the measurement is stored in the variable T.
-  // Function returns 1 if successful, 0 if failure.
-
-  status = pressure.getTemperature(T);
-  if (status == 0) return false;
-  if (Temp) *Temp = T - 3.6;
-  status = pressure.startPressure(3);
-
-  if (status == 0) return false;
-  // Wait for the measurement to complete:
-  delay(status);
-
-  // Retrieve the completed pressure measurement:
-  status = pressure.getPressure(a, T);
-  if (status != 0) if (Press) {
-      *Press = a;
-      airPlanePress = a < 880 ? true : false;
-    }
+  if (Temp) *Temp = bmp180.bmp085GetTemperature(bmp180.bmp085ReadUT()) - 3.6;
+  if (Press) {
+    *Press = (unsigned int) (bmp180.bmp085GetPressure(bmp180.bmp085ReadUP()) / 100);
+    airPlanePress = *Press < 880 ? true : false;
+  }
   return true;
 }
 
@@ -56,6 +31,6 @@ void bmp180Print()
   Serial.print(Temp, 2);
   Serial.println("'C");
   serialString(PSTR("abs press: "));
-  Serial.print(Press, 2);
+  Serial.print(Press);
   Serial.println("mb");
 }
