@@ -148,6 +148,9 @@ Payload p;
 
 /* Hardware and Software Changes Log
 
+ 2016-01-17
+ - Fix Temp and Press not updated before each non GPS message
+
  2016-01-14
  - Use new barometer library from seeedstudio and save 1Kb of flash program space
 

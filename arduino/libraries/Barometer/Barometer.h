@@ -44,7 +44,7 @@ const unsigned char OSS = 0;
 class Barometer
 {
     public:
-    void init(void);
+    bool init(void);
     long PressureCompensate;
     float bmp085GetTemperature(unsigned short ut);
     long bmp085GetPressure(unsigned long up);

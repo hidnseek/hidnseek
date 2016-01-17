@@ -35,7 +35,7 @@
 #include <Wire.h>
 #include <Arduino.h>
 
-void Barometer::init(void)
+bool Barometer::init(void)
 {
     Wire.begin();
     ac1 = bmp085ReadInt(0xAA);
@@ -49,6 +49,7 @@ void Barometer::init(void)
     mb = bmp085ReadInt(0xBA);
     mc = bmp085ReadInt(0xBC);
     md = bmp085ReadInt(0xBE);
+    return (bmp085Read(0xD0)==0x55);
 }
 
 // Read 1 byte from the BMP085 at 'address'

@@ -205,9 +205,7 @@ int main(void)
     if (accelStatus()) flashRed(2);
   }
 
-  bmp180.init();
-
-  if (true) { //baromPresent = pressure.begin()) {
+  if (baromPresent = bmp180.init()) {
     delay(500);
     bmp180Measure(&Temp, &Press);
     bmp180Print();
