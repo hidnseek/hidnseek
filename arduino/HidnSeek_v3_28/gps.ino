@@ -173,9 +173,12 @@ void makePayload() {
     if (spd < 120) airPlaneSpeed = false;
   }
 
+  if (alt > 4096) alt = (int)(alt /16) + 3840; // 16m step after 4096m
   if (alt > 8191) alt = 8191;
-  if (spd > 90) spd = (int)(spd / 3) + 60;
-  if (spd > 126) spd = 127;
+  
+  if (spd > 127) spd = (int)(spd / 16) + 94; // 16Km/h step after 127Km/h
+  else if (spd > 90) spd = (int)(spd / 3) + 60; // 3Km/h step after 90Km/h
+  if (spd > 126) spd = 127;      // limit is 528Km/h
 
   p.cpx = (uint32_t) alt << 19;
   p.cpx |= (uint32_t) spd << 12; // send in Km/h
