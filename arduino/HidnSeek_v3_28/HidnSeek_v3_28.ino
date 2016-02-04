@@ -162,7 +162,7 @@ int powerDownLoop(int msgs) {
     if (accelStatus()) { // device moved
       if (GPSactive) NoflashRed(); else delay(50);
       detectMotion++;
-      waitLoop = (msgs == MSG_NO_MOTION || modeSport != forceSport) ? 0 : 38; // exit immediatly or stay in 5mn loop
+      if (msgs == MSG_NO_MOTION || modeSport != forceSport) waitLoop = 0; // exit immediatly or stay in 5mn loop
     }
     if (i == 38 && detectMotion == 0 && msgs != MSG_NO_MOTION) i = waitLoop;  // Exit and enter in no motion mode
     i++;
@@ -236,7 +236,7 @@ int main(void)
 
   while (1) {
 
-    if ((uint16_t) (millis() - startCW) >= 8000) {
+    if ((uint16_t) (millis() - startCW) >= 4000) {
       digitalWrite(bluLEDpin, HIGH);
       delay(100);
       accelStatus();
