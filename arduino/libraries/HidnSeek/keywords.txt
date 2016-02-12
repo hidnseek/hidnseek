@@ -6,7 +6,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-Akeru	KEYWORD1
+HidnSeek	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)

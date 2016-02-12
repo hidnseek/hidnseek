@@ -15,18 +15,18 @@
  with droneRescue.  If not, see <http://www.gnu.org/licenses/>.*/
 
 #include <Arduino.h>
-#include "Akeru.h"
+#include "HidnSeek.h"
 
-Akeru::Akeru(uint8_t rxPin, uint8_t txPin) :
+HidnSeek::HidnSeek(uint8_t rxPin, uint8_t txPin) :
     _serial(rxPin, txPin) {
      //Since _lastSend is unsigned, this is infinity
     _lastSend = -1;
 }
 
-Akeru::~Akeru() {	
+HidnSeek::~HidnSeek() {	
 }
 
-int Akeru::begin() {
+int HidnSeek::begin() {
     _serial.begin(9600);
 
     //Remove un-ended commands from TST's buffer
@@ -58,7 +58,7 @@ int Akeru::begin() {
     if (strcmp (dataRX,"KO;") == 0) return(bread); else return(-1);
 }
 
-bool Akeru::isReady() {
+bool HidnSeek::isReady() {
 
 	// IMPORTANT WARNING. PLEASE READ BEFORE MODIFYING THE CODE
 	//
@@ -94,7 +94,7 @@ bool Akeru::isReady() {
     return _nextReturn() == OK;
 }
 
-bool Akeru::send(const void* data, uint8_t len) {
+bool HidnSeek::send(const void* data, uint8_t len) {
 	uint8_t* bytes = (uint8_t*)data;
 
 /*    if(!isReady()) {
@@ -122,7 +122,7 @@ bool Akeru::send(const void* data, uint8_t len) {
     return false;
 }
 
-uint8_t Akeru::getRev() {
+uint8_t HidnSeek::getRev() {
     _serial.write((uint8_t)'\0');
     _serial.write((uint8_t)'S');
     _serial.write((uint8_t)'F');
@@ -148,7 +148,7 @@ uint8_t Akeru::getRev() {
     }
 }
 
-unsigned long Akeru::getID() {
+unsigned long HidnSeek::getID() {
     _serial.write((uint8_t)'\0');
     _serial.write((uint8_t)'S');
     _serial.write((uint8_t)'F');
@@ -183,7 +183,8 @@ unsigned long Akeru::getID() {
 //3 16dBm
 //4 18dBm
 //5 Max (18-19dBm)
-bool Akeru::setPower(uint8_t power) {
+bool HidnSeek::setPower(uint8_t power) {
+/*
     power = power % 6; //It's 0-5
     _serial.write((uint8_t)'\0');
     _serial.write((uint8_t)'S');
@@ -191,6 +192,13 @@ bool Akeru::setPower(uint8_t power) {
     _serial.write((uint8_t)'G');
     _serial.write(power);
     _serial.write((uint8_t)';');
+*/
+    // 13,9dBm with 0,4,47 for the parameter
+    if (power > 0) _serial.println("AT$MT=0,4,127"); else {
+      // _serial.println("AT$MT=0,0,0");
+      // delay(100);
+      _serial.println("ATZ");
+    }
 
     char dataRX[5] = "";
     int  length    = 3;
@@ -220,7 +228,7 @@ bool Akeru::setPower(uint8_t power) {
     //return _nextReturn() == OK;
 }
 
-uint8_t Akeru::_nextReturn() {
+uint8_t HidnSeek::_nextReturn() {
     while(!_serial.available());
     char fstChar = _serial.read();
     while(_serial.read() != ';');

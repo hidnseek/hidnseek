@@ -20,10 +20,10 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
-class Akeru {
+class HidnSeek {
     public:
-        Akeru(uint8_t rxPin, uint8_t txPin);
-        ~Akeru();
+        HidnSeek(uint8_t rxPin, uint8_t txPin);
+        ~HidnSeek();
         int begin();
         bool isReady();
         bool send(const void* data, uint8_t len);

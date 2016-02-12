@@ -15,11 +15,11 @@
 
 #include "SoftwareSerial.h"
 #include "LowPower.h"
-#include "Akeru.h"
+#include "HidnSeek.h"
 #include "TinyGPS.h"
 #include "def.h"
 
-Akeru SigFox(txSigfox, rxSigfox);
+HidnSeek SigFox(txSigfox, rxSigfox);
 
 TinyGPS gps;
 
