@@ -80,12 +80,7 @@ bool accelStatus() {
       if (seq == 3) { // seq == 3
         saveEEprom();
         flashRed(20);
-        PORTC = 0;
-        DDRC = 0;
-        PORTD = 0;
-        DDRD = 0;
-        PORTB = 0;
-        DDRB = B00000010;
+        HidnSeek.setSupply(false);
         seq = 0;
       }
       if (seq == 4) {

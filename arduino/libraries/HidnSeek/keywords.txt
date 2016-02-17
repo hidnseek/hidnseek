@@ -6,7 +6,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-HidnSeek	KEYWORD1
+Akeru	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -18,6 +18,9 @@ send	KEYWORD2
 getRev	KEYWORD2
 getId	KEYWORD2
 setPower	KEYWORD2
+setSupply	KEYWORD2
+checkBattery	KEYWORD2
+initGPIO	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

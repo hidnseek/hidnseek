@@ -17,9 +17,9 @@ bool initSigFox() {
   serialString(PSTR("SigFox: "));
   unsigned long previousMillis = millis();
   while ((uint16_t) (millis() - previousMillis) < 6000) {
-    if (SigFox.begin() == 3) {
+    if (HidnSeek.begin() == 3) {
       //Serial.println(millis() - previousMillis);
-      Serial.println(SigFox.getID(), HEX);
+      Serial.println(HidnSeek.getID(), HEX);
       return true;
     }
     else delay(200);
@@ -58,7 +58,7 @@ void sendSigFox(byte msgType) {
   decodPayload();
   unsigned long previousMillis = millis();
   if ( !(msgType > 0 && airPlanePress) && !airPlaneSpeed) {
-    SigFox.send(&p, sizeof(p));
+    HidnSeek.send(&p, sizeof(p));
     stepMsg(); // Init the message number per day and time usage counters
     while ((uint16_t) (millis() - previousMillis) < 6000) delay(100);
   }

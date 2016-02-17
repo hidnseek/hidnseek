@@ -19,7 +19,7 @@
 #include "TinyGPS.h"
 #include "def.h"
 
-HidnSeek SigFox(txSigfox, rxSigfox);
+HidnSeek HidnSeek(txSigfox, rxSigfox);
 
 TinyGPS gps;
 

@@ -1,5 +1,5 @@
 /* This file started from Akeru library http://akeru.cc copyleft Snootlab, 2014
- and has been modified for droneRescue by Stephane D, 2014.
+ and has been modified for HidnSeek by Stephane D, 2014.
  
  This library is free software: you can redistribute it and/or
  modify it under the terms of the GNU General Public License as published
@@ -12,7 +12,7 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License along
- with droneRescue.  If not, see <http://www.gnu.org/licenses/>.*/
+ with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
 
 #include <Arduino.h>
 #include "HidnSeek.h"
@@ -234,3 +234,46 @@ uint8_t HidnSeek::_nextReturn() {
     while(_serial.read() != ';');
     return fstChar;
 }
+
+void HidnSeek::setSupply(boolean shd) {
+    if (shd) {
+        PORTB |= (1 << 1); //Pin 1 of portb is now confirm supply
+        DDRB |= B00000010; //Pin 1 of portb is an output
+    }
+    else {
+        PORTC = 0;
+        DDRC = 0;
+        PORTD = 0;
+        DDRD = 0;
+        PORTB = 0;
+        DDRB = B00000010;
+    }
+}
+
+void HidnSeek::initGPIO(boolean discret) {
+    PORTB = B00111010;
+    DDRB  = B00000111;
+    DDRC  = B01000101;
+    PORTC = B00000000;
+    if (discret) {
+        DDRD  = B00000010;
+        PORTD = B00011000;
+    }
+    else {
+        DDRD  = B11000010;
+        PORTD = B00011000;
+    }
+}
+
+void HidnSeek::checkBattery() {
+    if (millis() - _lastCheck > 2000UL) {
+        _lastCheck = millis();
+        boolean _grst = PORTB & (1<<2);
+        PORTB |= (1 << 2);
+        if (!_grst) delay(50);
+        unsigned int value = analogRead(A1);
+        if (value < 900) setSupply(false);   // Below 3,7V shutdown the supply
+        if (!_grst) PORTB &= ~(1<<2);
+    }
+}
+

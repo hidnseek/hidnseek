@@ -1,5 +1,5 @@
 /* This file started from Akeru library http://akeru.cc copyleft Snootlab, 2014
- and has been modified for droneRescue by Stephane D, 2014.
+ and has been modified for HidnSeek by Stephane D, 2014.
  
  This library is free software: you can redistribute it and/or
  modify it under the terms of the GNU General Public License as published
@@ -12,10 +12,10 @@
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License along
- with droneRescue.  If not, see <http://www.gnu.org/licenses/>.*/
+ with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef AKERU_H
-#define AKERU_H
+#ifndef HIDNSEEK_H
+#define HIDNSEEK_H
 
 #include <Arduino.h>
 #include <SoftwareSerial.h>
@@ -30,6 +30,9 @@ class HidnSeek {
         uint8_t getRev();
         unsigned long getID();
         bool setPower(uint8_t power);
+        void setSupply(boolean shd);
+        void initGPIO(boolean discret);
+        void checkBattery();
 
         enum RETURN_CODE {
             OK = 'O',
@@ -39,7 +42,7 @@ class HidnSeek {
 
     private:
         SoftwareSerial _serial;
-        unsigned long _lastSend;
+        unsigned long _lastSend, _lastCheck;
         uint8_t _rxPin;
         uint8_t _txPin;
         uint8_t _nextReturn();
