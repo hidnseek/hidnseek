@@ -26,6 +26,7 @@ Copy all libraries in this repository that are not present in your libraries dir
 Launch Arduino IDE and go to the board selection and select HidnSeek at 12MHz
 
 Go to the Examples and select one of available in the HidnSeek tree (BlinkWithin30seconds, HidnSeek_v3_28 and detectMotion)
+
 ![Examples](HnSexamples.png)
 
 ###HidnSeek_v3_28 of the 3.28 release board:
@@ -39,4 +40,5 @@ Once it's done, you can plug the USB cable to the computer and the HidnSeek boar
 You will see between 30 and 60 red LED flash to notice that you are in DFU mode. Click on download on your sketch windows.
 Firmware update will be transfered in less than 4 seconds. Do not care about the clk speed warning.
 Your sketch is ready to start after the booting time (0-30) seconds
+
 Have fun !
