@@ -52,5 +52,5 @@ Have fun !
 
 You can plug a USB Serial TTL dongle and get debug output from HidNseek on pin TX and output from GPS on RX. 
 
-![USB cable](USB-SERIAL-CABLE.png) | If GPS is not enabled, is output is floating and you can use that state to send serial data to HidnSeek **at 3,3V maximum !!!!**
+![USB cable](USB-SERIAL-CABLE.png) | If GPS is not enabled, its output is floating and you can use that state to send serial data to HidnSeek **at 3,3V maximum !!!!**
 ------------- | -------------
