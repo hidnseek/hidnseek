@@ -15,8 +15,6 @@ Second, find in the installation directory the boards.txt file
 
 Insert at the end of this file the description of HidnSeek from [boards.txt](Hardware/boards.txt) 
 
-![ArduinoIDE](ArduinoIDE.png)
-
 ##libraries : librairies used to compile the sketch
 
 Copy all libraries in this repository that are not present in your libraries directory
@@ -24,6 +22,12 @@ Copy all libraries in this repository that are not present in your libraries dir
 ##HidnSeek Sketch Examples
 
 Launch Arduino IDE and go to the board selection and select HidnSeek at 12MHz
+
+![ArduinoIDE](ArduinoIDE.png)
+
+Then select the programmator type USBasp
+
+![HnSprogType](HnSprogType.png)
 
 Go to the Examples and select one of available in the HidnSeek tree (BlinkWithin30seconds, HidnSeek_v3_28 and detectMotion)
 
