@@ -38,7 +38,7 @@ There is two methods to prepare HidnSeek for DFU mode (firmware update)
 2. make a short circuit between R & G pins (you will loose daily statistics)
 
 Once it's done, you can plug the USB cable to the computer and the HidnSeek board.
-You will see between 30 and 60 red LED flash to notice that you are in DFU mode. Click on download on your sketch windows.
+You will see between 30 and 60 red LED flashes to notice that you are in DFU mode. Click on download on your sketch windows.
 Firmware update will be transfered in less than 4 seconds. Do not care about the clk speed warning.
 Your sketch is ready to start after the booting time (0-30) seconds
 
