@@ -8,16 +8,25 @@ If Arduino IDE already installed, leave/exit the software.
 
 Second, find in the installation directory the boards.txt file
 
-* /Users/<USERNAME>/Library/Arduino/preferences.txt (Mac)
-* c:\Documents and Settings\<USERNAME>\Application Data\Arduino\preferences.txt (Windows XP)
-* c:\Users\<USERNAME>\AppData\Roaming\Arduino\preferences.txt (Windows Vista)
-* ~/.arduino/preferences.txt (Linux)
+* /Applications/Arduino.app/Contents/Java/hardware/arduino/avr/boards.txt (Mac)
+* c:\Documents and Settings\<USERNAME>\Application Data\Arduino\hardware\arduino\avr\boards.txt (Windows XP)
+* c:\Users\<USERNAME>\AppData\Roaming\Arduino\hardware\arduino\avr\boards.txt (Windows Vista)
+* ~/.arduino/hardware/arduino/avr/boards.txt (Linux)
 
 Insert at the end of this file the description of HidnSeek from [boards.txt](Hardware/boards.txt) 
 
-Launch Arduino IDE and go to the board selection and select HidnSeek at 12MHz
-
 ![ArduinoIDE](ArduinoIDE.png)
 
-##HidnSeek_v3_28 : Arduino Sketch of the 3.28 release board
 ##libraries : librairies used to compile the sketch
+
+Copy all libraries in this repository that are not present in your libraries directory
+
+##HidnSeek_v3_28 : Arduino Sketch of the 3.28 release board
+
+Launch Arduino IDE and go to the board selection and select HidnSeek at 12MHz
+
+Load the sketch HidnSeek_v3_28 and compile it. The code size must be 24 950 bytes and available memory is 1027 bytes
+
+In the library HidnSeek (started from Akeru work) you can find examples (Blink and MotionDetection)
+
+Have fun !
