@@ -43,3 +43,7 @@ Firmware update will be transfered in less than 4 seconds. Do not care about the
 Your sketch is ready to start after the booting time (0-30) seconds
 
 Have fun !
+
+## Serial debugging
+
+You can plug a USB Serial TTL dongle and get debug output from HidNseek on pin TX and output from GPS on RX. If GPS is not enabled, is output is floating and you can use that state to send serial data to HidnSeek **at 3,3V maximum !!!!**
