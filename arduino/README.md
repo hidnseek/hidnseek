@@ -33,6 +33,7 @@ Go to the Examples and select one of available in the HidnSeek tree (BlinkWithin
 Load the sketch HidnSeek_v3_28 and compile it. The code size must be 24 950 bytes and available memory is 1027 bytes
 
 There is two methods to prepare HidnSeek for DFU mode (firmware update)
+
 1. make the dance that you can find on the manual or [FAQ](https://www.hidnseek.fr/faq)
 2. make a short circuit between R & G pins (you will loose daily statistics)
 
