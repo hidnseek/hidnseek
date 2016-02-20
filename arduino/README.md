@@ -1,7 +1,7 @@
 #Arduino Hardware, source code and libraries
 ##Hardware : changes and needs for Arduino IDE 1.6.x
 
-How to upload new firmware in Hidnsek ?
+How to upload new firmware in Hidnseek ?
 
 First install Arduino IDE (https://www.arduino.cc/en/Main/Software)
 If Arduino IDE already installed, leave/exit the software.
