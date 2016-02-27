@@ -17,8 +17,8 @@
           "help": {
             "online": ""
           },
-          "url": "https://hidnseek.github.io/hidnseek/USBaspLoader_1.0.tar.gz",
-          "archiveFileName": "USBaspLoader_1.0.tar.gz",
+          "url": "https://hidnseek.github.io/hidnseek/USBaspLoader_1.1.tar.gz",
+          "archiveFileName": "USBaspLoader_1.1.tar.gz",
           "checksum": "SHA-256:31e751ec2672b18b890be6c34708251d168e5b7ca9bc1d6b3e7a3b9d48938acf",
           "size": "5089",
           "boards": [
