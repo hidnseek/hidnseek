@@ -24,6 +24,7 @@ MMA8653 accel;
 // Variables will change :
 int ledState = LOW;             // ledState used to set the LED
 int ledColor = redLEDpin;
+uint8_t timestamp = -1;
 
 // Generally, you should use "unsigned long" for variables that hold time
 // The value will quickly become too large for an int to store
@@ -62,12 +63,17 @@ void loop()
 
   unsigned long currentMillis = millis();
 
-  if ((currentMillis - start) > 30000) HidnSeek.setSupply(false);
-
   if (currentMillis - previousMillis >= 200) {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
-    if (accelStatus())      ledColor = redLEDpin;      else ledColor = bluLEDpin;
+    if (accelStatus()) {
+      timestamp = -1;
+      ledColor = redLEDpin;
+    }
+    else {
+      if (timestamp-- == 0) HidnSeek.setSupply(false);
+      ledColor = bluLEDpin;
+    }
     digitalWrite(ledColor, HIGH);
     delay(50);
     digitalWrite(ledColor, LOW);
