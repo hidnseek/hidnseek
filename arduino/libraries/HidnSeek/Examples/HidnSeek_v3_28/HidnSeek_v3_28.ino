@@ -46,68 +46,28 @@ void serialString (PGM_P s) {
 void initGPIO()
 {
   // Set output to 0 for not used Pads
-  pinMode(sensorA0, OUTPUT);
-  digitalWrite(sensorA0, LOW);
-
-  pinMode(piezzo, OUTPUT);
-  digitalWrite(piezzo, LOW);
-
-  pinMode(chg500mA, OUTPUT);
-  digitalWrite(chg500mA, LOW);
-
-  pinMode(redLEDpin, OUTPUT);
-  digitalWrite(redLEDpin, LOW);
-
-  pinMode(rstPin, OUTPUT);
-  digitalWrite(rstPin, LOW);
-
-  pinMode(satLEDpin, INPUT);
-
-  pinMode(accINT, INPUT);
-  digitalWrite(accINT, HIGH);
-
-  pinMode(usbDM, INPUT);
-  digitalWrite(usbDM, HIGH); // Pull-up already done by external 1.5K
-
-  pinMode(usbDP, INPUT);
-  digitalWrite(usbDP, LOW);
-
-  digitalWrite(shdPin, HIGH);
-  pinMode(shdPin, OUTPUT);
-
-  pinMode(piezzo, OUTPUT);
-  digitalWrite(piezzo, LOW);
-
-  for (uint8_t i = 11; i < 14; i++) { // SPI bus on pull-up
-    digitalWrite (i, HIGH);
-    pinMode (i, INPUT);
-  }
+  PORTB = (DIGITAL_PULLUP >> 8) & 0xff;
+  DDRB  = (DIGITAL_OUTPUT >> 8) & 0xff;
+  PORTC = 0x00;
+  DDRC  = DDRC_MASK;
+  PORTD = DIGITAL_PULLUP & 0xff;
+  DDRD  = DIGITAL_OUTPUT & 0xff;
 }
 
 void flashRed(int num) {
   while (num > 0) {
-    digitalWrite(redLEDpin, HIGH);
+    PORTD |= (1 << redLEDpin);
     delay(50);
-    digitalWrite(redLEDpin, LOW);
-    delay(50);
-    num = num - 1;
+    PORTD &= ~(1 << redLEDpin);
+    if (--num) delay(50);
   }
-}
-
-void flashRed() {
-  digitalWrite(redLEDpin, HIGH);
-  delay(25);
-  digitalWrite(redLEDpin, LOW);
-  delay(50);
 }
 
 void NoflashRed() {
   delay(25);
-  digitalWrite(redLEDpin, LOW);
-  if (forceSport) digitalWrite(bluLEDpin, LOW);
+  PORTD &= ~(1 << redLEDpin) & ~(forceSport << bluLEDpin);
   delay(50);
-  digitalWrite(redLEDpin, HIGH);
-  if (forceSport) digitalWrite(bluLEDpin, HIGH);
+  PORTD |= (1 << redLEDpin) | (forceSport << bluLEDpin);
 }
 
 int powerDownLoop(int msgs) {
@@ -153,8 +113,7 @@ int powerDownLoop(int msgs) {
   unsigned int i = 0;
   while (i < waitLoop) {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-    digitalWrite(redLEDpin, HIGH);
-    if (forceSport) digitalWrite(bluLEDpin, HIGH);
+    PORTD |= (1 << redLEDpin) | (forceSport << bluLEDpin);
     if (GPSactive) {
       batterySense();
       if (batteryPercent < 98 && !forceSport) gpsStandby();
@@ -166,8 +125,7 @@ int powerDownLoop(int msgs) {
     }
     if (i == 38 && detectMotion == 0 && msgs != MSG_NO_MOTION) i = waitLoop;  // Exit and enter in no motion mode
     i++;
-    digitalWrite(bluLEDpin, LOW);
-    digitalWrite(redLEDpin, LOW);
+    PORTD &= ~(1 << redLEDpin) & ~(1 << bluLEDpin);
   }
   detectMotion = (detectMotion > MOTION_MIN_NUMBER || forceSport) ? 1 : 0;
   if (msgs == MSG_NO_MOTION && i > waitLoop) detectMotion = -1; // This mean a motion after a while

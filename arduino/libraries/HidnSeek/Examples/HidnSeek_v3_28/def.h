@@ -84,6 +84,15 @@ enum {
 #define chgFLAG         A7
 /*********************************************************************/
 
+/****************** Pins output values *******************************/
+#define DIGITAL_PULLUP ((1 << shdPin) | (1 << accINT) | (1 << usbDP) | (1 << usbDM))
+/*********************************************************************/
+
+/****************** Pins direction ***********************************/
+#define DDRC_MASK (1 << 2) | (1 << 6)
+#define DIGITAL_OUTPUT ((1 << shdPin) | (1 << redLEDpin) | (1 << bluLEDpin) | (1 << rxSigfox))
+/*********************************************************************/
+
 unsigned char buffer[32];
 
 unsigned long fix_age = 0;
@@ -106,7 +115,7 @@ unsigned long startCW = 0;
 
 #define limitSport 48
 unsigned long debugSport = 0;
-boolean forceSport = false;
+uint8_t forceSport = 0;
 unsigned long loopSport = 0;
 
 unsigned long start = millis();

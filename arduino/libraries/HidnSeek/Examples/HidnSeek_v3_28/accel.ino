@@ -76,7 +76,6 @@ bool accelStatus() {
       }
       else seq = 0;
       accelPosition = newPosition;
-      //digitalWrite(chg500mA,accelPosition == POS_FACE_UP ? LOW : HIGH);
       if (seq == 3) { // seq == 3
         saveEEprom();
         flashRed(20);
@@ -85,7 +84,7 @@ bool accelStatus() {
       }
       if (seq == 4) {
         if (MsgCount < 90) {
-          forceSport = true;
+          forceSport = 1 - forceSport;
           debugSport = 0;
           if (!GPSactive) gpsInit();
           flashRed(8);
