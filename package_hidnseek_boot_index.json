@@ -1,0 +1,44 @@
+{
+  "packages": [
+    {
+      "name": "USBaspLoader",
+      "maintainer": "HidnSeek",
+      "websiteURL": "https://github.com/hidnseek/hidnseek",
+      "email": "contact@hidnseek.fr",
+      "help": {
+        "online": ""
+      },
+      "platforms": [
+        {
+          "name": "USBaspLoader",
+          "architecture": "avr",
+          "version": "1.0",
+          "category": "Contributed",
+          "help": {
+            "online": ""
+          },
+          "url": "https://hidnseek.github.io/hidnseek/USBaspLoader_1.0.tar.gz",
+          "archiveFileName": "USBaspLoader_1.0.tar.gz",
+          "checksum": "SHA-256:b99385b2eee1c2141d6fdbaffa97246b76bfa5123b8192eb2fdddbcbf5f61d05",
+          "size": "5030",
+          "boards": [
+            {"name": "ATmega328P"}
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "arduino",
+              "name": "avr-gcc",
+              "version": "4.8.1-arduino5"
+            },
+            {
+              "packager": "arduino",
+              "name": "avrdude",
+              "version": "6.0.1-arduino5"
+            }
+          ]
+        }
+      ],
+      "tools": []
+    }
+  ]
+}
