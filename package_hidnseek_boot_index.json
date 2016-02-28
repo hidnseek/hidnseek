@@ -12,15 +12,15 @@
         {
           "name": "USBaspLoader",
           "architecture": "avr",
-          "version": "1.0",
+          "version": "1.0.1",
           "category": "Contributed",
           "help": {
             "online": ""
           },
-          "url": "https://hidnseek.github.io/hidnseek/USBaspLoader_1.1.tar.gz",
-          "archiveFileName": "USBaspLoader_1.1.tar.gz",
-          "checksum": "SHA-256:31e751ec2672b18b890be6c34708251d168e5b7ca9bc1d6b3e7a3b9d48938acf",
-          "size": "5089",
+	  "url": "https://hidnseek.github.io/hidnseek/USBaspLoader_1.0.1.tar.gz",
+          "archiveFileName": "USBaspLoader_1.0.1.tar.gz",
+          "checksum": "SHA-256:49dc8e2423fa278e61be793fea86234fa965041f9a3a4fc8391f92651631127f",
+          "size": "5101",
           "boards": [
             {"name": "ATmega328P"}
           ],
