@@ -15,7 +15,7 @@ hns.bootloader.tool=avrdude
 hns.bootloader.low_fuses=0xFF
 hns.bootloader.high_fuses=0xD8
 hns.bootloader.extended_fuses=0x05
-hns.bootloader.file=HnS_mega328_12mhz.hex
+hns.bootloader.file=bootloader.hex
 hns.bootloader.unlock_bits=0x3F
 hns.bootloader.lock_bits=0x0F
 
