@@ -1,5 +1,9 @@
 #Arduino Hardware, source code and libraries
-##Hardware : changes and needs for Arduino IDE 1.6.x
+
+##Hardware : changes and needs for Arduino IDE 1.6.4 and higher
+Go to the page [Drivers](/Drivers) in this repository and follow instructions
+
+##Hardware : changes and needs for Arduino IDE
 
 How to upload new firmware in Hidnseek ?
 
@@ -13,7 +17,7 @@ Second, find in the installation directory the boards.txt file
 * c:\Users\<USERNAME>\AppData\Roaming\Arduino\hardware\arduino\avr\boards.txt (Windows Vista)
 * ~/.arduino/hardware/arduino/avr/boards.txt (Linux)
 
-Insert at the end of this file the description of HidnSeek from [boards.txt](Hardware/boards.txt) 
+Insert at the end of this file the description of HidnSeek from [boards.txt](/Drivers/Hardware/boards.txt) 
 
 ##libraries : librairies used to compile the sketch
 
