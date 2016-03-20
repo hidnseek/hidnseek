@@ -1,17 +1,17 @@
 /*  This file is part of NazaCanDecoderSigfox.
 
- HidnSeek is free software: you can redistribute it and/or
- modify it under the terms of the GNU General Public License as published
- by the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  HidnSeek is free software: you can redistribute it and/or
+  modify it under the terms of the GNU General Public License as published
+  by the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
- HidnSeek is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  HidnSeek is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License along
- with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
+  You should have received a copy of the GNU General Public License along
+  with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
 
 // EEPROM map
 // byte 0: today
@@ -26,9 +26,9 @@ void stepMsg()
     if (day != today) { // Reset or new day
       today = EEPROM.read(ADDR_TODAY);
       if (today != day) { // New day
-        if (today < 32) EEPROM.write(today, MsgCount);
+        saveEEprom();
         EEPROM.write(ADDR_TODAY, day);
-        EEPROM.write(day, ADDR_TODAY);
+        EEPROM.write(day, 0);
         today = day;
         MsgCount = 0;
       }
@@ -44,9 +44,15 @@ void saveEEprom() {
 }
 
 void dumpEEprom() {
-  today = EEPROM.read(0);
+  // Display the last day used by the tracker
+  today = EEPROM.read(ADDR_TODAY);
+  if (today == 255) {
+    today = 0;
+    EEPROM.write(ADDR_TODAY, 0);;
+  }
   serialString(PSTR("Last day:"));
   Serial.println(today);
+  // Display numbers of messages sent to sigfox network on day 1, 2, 3, ... , 30, 31
   serialString(PSTR("Usage per days:"));
   for (int i = ADDR_SENT; i < ADDR_SENT + 31; i++) {
     MsgCount = EEPROM.read(i);
