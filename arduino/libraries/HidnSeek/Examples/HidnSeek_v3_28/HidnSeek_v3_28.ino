@@ -1,18 +1,20 @@
 /*  This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- th  e Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  it under the terms of the GNU General Public License as published by
+  th  e Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- HidnSeek by StephaneD 20150313 Not for commercial use              */
+  HidnSeek by StephaneD 20150313 Not for commercial use              */
 
+#define FILE "HidnSeek_v3_28"
+#include "EEPROM.h"
 #include "SoftwareSerial.h"
 #include "LowPower.h"
 #include "HidnSeek.h"
@@ -70,12 +72,17 @@ void NoflashRed() {
   PORTD |= (1 << redLEDpin) | (forceSport << bluLEDpin);
 }
 
+void powerDown(period_t sleepDuration) {
+  Serial.flush();
+  LowPower.powerDown(sleepDuration, ADC_OFF, BOD_OFF);
+}
+
 int powerDownLoop(int msgs) {
-  if (batterySense()) shutdownSys(); else digitalWrite(shdPin, HIGH);
+  if (batterySense()) shutdownSys(); // else digitalWrite(shdPin, HIGH);
   if (forceSport) {
-    if ((batteryPercent < 25) || (debugSport++ >= limitSport)) {
+    if ((batteryPercent < 25) || (limitSport++ >= SPORT_LIMIT)) {
       //serialString(PSTR("Sport Limit")); Serial.println();
-      forceSport = false;
+      forceSport = 0;
     }
   } else gpsStandby();
 
@@ -84,13 +91,17 @@ int powerDownLoop(int msgs) {
   }
 
   accelStatus(); // record the current angle
-  detectMotion = 0;
+  if (msgs == MSG_POSITION && spd > 15 && noSat == 0) detectMotion = MOTION_MIN_NUMBER << 1; else detectMotion = 0;
+
   // Loop duration 8s. 75x 10mn, 150x 20mn,
   static uint8_t countNoMotion;
   if (msgs != MSG_NO_MOTION) countNoMotion = 0;
+
+  uint8_t modeSport = forceSport;
+
   unsigned int waitLoop;
   if (msgs == MSG_NO_MOTION) {
-    waitLoop = 410 << countNoMotion; // 450=1h loop, ajusted to 410 on 13/12/15 420 on 24/11/15
+    waitLoop = 420 << countNoMotion; // 1h loop
     hour += (1 << countNoMotion);
     if (hour > 23) {
       hour = 0;
@@ -106,13 +117,17 @@ int powerDownLoop(int msgs) {
     }
     if (countNoMotion < 3) countNoMotion++;
   } else {
-    waitLoop = 75 - loopGPS;  // 10mn loop: 6mn sleep + 4mn for GPS
+    waitLoop = (PERIOD_COUNT >> forceSport) - loopGPS;  // 10mn loop: 6mn sleep + 4mn for GPS
   }
-  Serial.flush();
-  boolean modeSport = forceSport;
+
   unsigned int i = 0;
+
+  period_t sleepDuration;
+  if (msgs != MSG_NO_MOTION && detectMotion == 0 && forceSport == 0) sleepDuration = SLEEP_4S; else sleepDuration = SLEEP_8S;
+
+  Serial.flush();
   while (i < waitLoop) {
-    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    LowPower.powerDown(sleepDuration, ADC_OFF, BOD_OFF);
     PORTD |= (1 << redLEDpin) | (forceSport << bluLEDpin);
     if (GPSactive) {
       batterySense();
@@ -121,17 +136,23 @@ int powerDownLoop(int msgs) {
     if (accelStatus()) { // device moved
       if (GPSactive) NoflashRed(); else delay(50);
       detectMotion++;
+      if (sleepDuration == SLEEP_4S) {
+        sleepDuration = SLEEP_8S;
+        i = i >> 1;
+      }
       if (msgs == MSG_NO_MOTION || modeSport != forceSport) waitLoop = 0; // exit immediatly or stay in 5mn loop
     }
-    if (i == 38 && detectMotion == 0 && msgs != MSG_NO_MOTION) i = waitLoop;  // Exit and enter in no motion mode
+    //if (i == 38 && detectMotion == 0 && msgs != MSG_NO_MOTION) i = waitLoop;  // Exit and enter in no motion mode
     i++;
     PORTD &= ~(1 << redLEDpin) & ~(1 << bluLEDpin);
   }
   detectMotion = (detectMotion > MOTION_MIN_NUMBER || forceSport) ? 1 : 0;
   if (msgs == MSG_NO_MOTION && i > waitLoop) detectMotion = -1; // This mean a motion after a while
-  if (detectMotion > 0 && !forceSport) GPSactive = gpsInit();
-  start = startCW = millis();
+  if (detectMotion > 0 && !GPSactive) GPSactive = gpsInit();
+  start = millis();
   loopGPS = syncSat = noSat = 0;
+  alt = spd = 0;
+  p.lat = p.lon = 0;
   return detectMotion;
 }
 
@@ -144,14 +165,16 @@ int main(void)
 
   Serial.begin(9600);
   Serial.println();
-  serialString(PSTR("Firmware " __FILE__ "\nRelease " __DATE__ " " __TIME__));
+  serialString(PSTR("Firmware " FILE "\nRelease " __DATE__ " " __TIME__));
   Serial.println();
 
   dumpEEprom();
 
   initSense();
   batterySense();
-  serialString(PSTR("Init batterie reg: "));
+  serialString(PSTR(" Battery: "));
+  Serial.print(batteryPercent);
+  serialString(PSTR("% "));
   Serial.println(batteryValue);
   delay(100);
   if (GPSactive = gpsInit()) {
@@ -159,25 +182,22 @@ int main(void)
     flashRed(1);
   }
   if (accelPresent = initMems()) {
-    delay(500);
+    powerDown(SLEEP_500MS);
     if (accelStatus()) flashRed(2);
   }
 
   if (baromPresent = bmp180.init()) {
-    delay(500);
+    powerDown(SLEEP_500MS);
     bmp180Measure(&Temp, &Press);
-    bmp180Print();
     flashRed(3);
-  } else {
-    serialString(PSTR("Temp fail"));
-    Serial.println();
   }
+  bmp180Print();
 
-  if (modemPresent = initSigFox()) {
-    delay(500);
+  if (initSigFox()) {
+    powerDown(SLEEP_500MS);
     flashRed(4);
   } else {
-    digitalWrite(bluLEDpin, HIGH);
+    PORTD |= (1 << bluLEDpin);
     Serial.flush();
     delay(500);
     digitalWrite(shdPin, LOW);
@@ -190,28 +210,31 @@ int main(void)
   // Change charge current to 250mA Not recommanded if connected to a computer, use with wall adapter only.
   //digitalWrite(chg500mA, HIGH);
 
-  start = startCW = millis();
+  start = millis();
 
   while (1) {
 
-    if ((uint16_t) (millis() - startCW) >= 4000) {
-      digitalWrite(bluLEDpin, HIGH);
+    if ((uint16_t) (millis() - start) >= 4000) {
+      PORTD |= (1 << bluLEDpin);
       delay(100);
       accelStatus();
-      digitalWrite(bluLEDpin, LOW);
+      PORTD &= ~(1 << bluLEDpin);
       loopGPS++;
-      startCW = millis();
+      start = millis();
     }
 
     // if a sentence is received, we can check the checksum, parse it...
     if (detectMotion == 1) {
-      if (gpsProcess()) LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+      if (gpsProcess()) powerDown(SLEEP_500MS);
     }
 
-    // Let 4mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
-    // Reduce the delay to 2mn if no satellites are visible
-    if (( (unsigned long)(millis() - start) >= 120000) || syncSat >= 30 || loopGPS >= 30 || noSat >= 120) {
-      detectMotion = powerDownLoop(noSat == 0 ? MSG_POSITION : MSG_NO_GPS);
+    // Let 2mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
+    if ( syncSat >= 30 && noSat == 0) {
+      detectMotion = powerDownLoop(MSG_POSITION);
+    }
+
+    if ( loopGPS >= 30 || noSat >= 120) {
+      detectMotion = powerDownLoop(MSG_NO_GPS);
     }
 
     if (detectMotion == 0) detectMotion = powerDownLoop(MSG_NO_MOTION);
