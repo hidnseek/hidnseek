@@ -1,17 +1,17 @@
 /*  This file is part of HidnSeek.
 
- HidnSeek is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  HidnSeek is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
- HidnSeek is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  HidnSeek is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
+  You should have received a copy of the GNU General Public License
+  along with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
 
 bool initMems() {
   serialString(PSTR("Init Mems:"));
@@ -79,14 +79,19 @@ bool accelStatus() {
       if (seq == 3) { // seq == 3
         saveEEprom();
         flashRed(20);
-        HidnSeek.setSupply(false);
+        PORTC = 0;
+        DDRC = 0;
+        PORTD = 0;
+        DDRD = 0;
+        PORTB = 0;
+        DDRB = B00000010;
         seq = 0;
       }
       if (seq == 4) {
         if (MsgCount < 90) {
           forceSport = 1 - forceSport;
-          debugSport = 0;
-          if (!GPSactive) gpsInit();
+          limitSport = 0;
+          if (forceSport && !GPSactive) gpsInit();
           flashRed(8);
         }
         seq = 0;
