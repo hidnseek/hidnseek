@@ -1,17 +1,17 @@
 /*  This file is part of HidnSeek.
 
- HidnSeek is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  HidnSeek is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
- HidnSeek is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  HidnSeek is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
+  You should have received a copy of the GNU General Public License
+  along with HidnSeek.  If not, see <http://www.gnu.org/licenses/>.*/
 
 void gpsCmd (PGM_P s) {
   int XOR = 0;
@@ -38,7 +38,7 @@ bool gpsInit()
     delay(100);
   }
   if (GPSready) {
-    gpsCmd(PSTR(PMTK_SET_NMEA_OUTPUT_RMCGGA));
+    gpsCmd(PSTR(PMTK_SET_NMEA_OUTPUT));
     gpsCmd(PSTR(PMTK_SET_NMEA_UPDATE_1HZ));   // 1 Hz update rate
   } else digitalWrite(rstPin, LOW);
   return GPSready;
@@ -103,17 +103,17 @@ bool gpsProcess()
       serialString(PSTR(", lon="));
       Serial.println(p.lon, 7);
     } else if (abs(p.lat) > 2 && abs(p.lon) > 2) distance = gps.distance_between(p.lat, p.lon, previous_lat, previous_lon);
-    if (newGpsData && distance < 15 && syncSat > 20) {
+    if (newGpsData && distance < 15 && syncSat > 20 && forceSport == 0) {
       syncSat = 255;
     }
 
     if (newGpsData) {
-      if (sat > 3 && abs(p.lat) > 2 && abs(p.lon) > 2) {
+      if (sat < 4 || (abs(p.lat) < 2 && abs(p.lon) < 2)) noSat++; 
+      else {
         noSat = 0;
         syncSat++; // else syncSat = 0; // increase global variable
       }
-      else noSat++;
-      if ((gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop()) < 100) syncSat ++;
+      if (sat > 7) syncSat ++;
     }
     else noSat++;
   }
@@ -154,7 +154,7 @@ void printData(bool complete) {
   if (GPSactive) serialString(PSTR(", GPS "));
   if (forceSport) {
     serialString(PSTR(", sport="));
-    Serial.print(debugSport);
+    Serial.print(limitSport);
   }
   serialString(PSTR(", bat="));
   Serial.print(batteryPercent);
@@ -165,26 +165,28 @@ void printData(bool complete) {
 }
 
 void makePayload() {
+  uint8_t cap;
   if (sat > 3) {
     if (spd > 120 && alt > 1250) {
       airPlaneSpeed = true;  // Abort GPS message if Airplane detected
       syncSat = 255;
     }
     if (spd < 120) airPlaneSpeed = false;
-  }
 
-  if (alt > 4096) alt = (int)(alt /16) + 3840; // 16m step after 4096m
-  if (alt > 8191) alt = 8191;
-  
-  if (spd > 127) spd = (int)(spd / 16) + 94; // 16Km/h step after 127Km/h
-  else if (spd > 90) spd = (int)(spd / 3) + 60; // 3Km/h step after 90Km/h
-  if (spd > 126) spd = 127;      // limit is 528Km/h
+    if (alt > 4096) alt = (uint16_t)(alt / 16) + 3840; // 16m step after 4096m
+    if (alt > 8191) alt = 8191;
+
+    if (spd > 127) spd = (uint16_t)(spd / 16) + 94; // 16Km/h step after 127Km/h
+    else if (spd > 90) spd = (uint16_t)(spd / 3) + 60; // 3Km/h step after 90Km/h
+    if (spd > 126) spd = 127;      // limit is 528Km/h
+    cap = (gps.course() / 90) % 4;
+  } else cap = (accelPosition < 3) ? accelPosition : 3;
 
   p.cpx = (uint32_t) alt << 19;
   p.cpx |= (uint32_t) spd << 12; // send in Km/h
-  p.cpx |= (uint32_t) ( (gps.course() / 90) % 4) << 10;  // send N/E/S/W
+  p.cpx |= (uint32_t) cap << 10;  // send N/E/S/W
   p.cpx |= (uint32_t) ( 127 & batteryPercent) << 3; // bat (7bits)
-  p.cpx |= (uint32_t) ( 3 & int(sat / 4)); // sat range is 0 to 14
+  p.cpx |= (uint32_t) 3 & (sat / 4); // sat range is 0 to 14
 }
 
 void decodPayload() {
