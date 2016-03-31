@@ -15,7 +15,6 @@
 
 #define FILE "HidnSeek_v3_28"
 #include "EEPROM.h"
-#include "SoftwareSerial.h"
 #include "LowPower.h"
 #include "HidnSeek.h"
 #include "TinyGPS.h"
@@ -25,7 +24,6 @@ HidnSeek HidnSeek(txSigfox, rxSigfox);
 
 TinyGPS gps;
 
-#include "Wire.h"
 #include "MMA8653.h"
 MMA8653 accel;
 

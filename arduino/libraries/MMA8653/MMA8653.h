@@ -20,7 +20,7 @@
 
 
 #include "Arduino.h"
-#include "../Wire/Wire.h"
+#include "Wire.h"
 
 
 ////////////////////////////////////////////
