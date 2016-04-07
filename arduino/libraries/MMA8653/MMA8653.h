@@ -24,6 +24,13 @@
 
 
 ////////////////////////////////////////////
+// uncomment to add portrait/Landscape interrupt
+// #define _MMA_8653_PORTRAIT_LANDSCAPE
+
+// uncomment to enable G factor outputs
+// #define _MMA_8653_FACTOR
+
+////////////////////////////////////////////
 // Interrupts
 
 
@@ -51,9 +58,9 @@ class MMA8653
     float getXG();
     float getYG();
     float getZG();
-    int16_t getX();
-    int16_t getY();
-    int16_t getZ();
+    int8_t getX();
+    int8_t getY();
+    int8_t getZ();
     float getRho();
     float getPhi();
     float getTheta();
@@ -66,13 +73,13 @@ class MMA8653
     bool setInterrupt(uint8_t type, uint8_t pin, bool on);
     bool disableAllInterrupts();
     void initMotion();
+    void standby();
+    void active();
+
   private:
     uint8_t _read_register(uint8_t offset);
     void _write_register(uint8_t b, uint8_t offset);
     
-    void _standby();
-    void _active();
-
     float geta2d(float gx, float gy);
     float geta3d(float gx, float gy, float gz);
     float _getRho(float ax, float ay, float az);
@@ -82,9 +89,9 @@ class MMA8653
     uint8_t _addr;
     uint8_t _stat;
     uint8_t _scale;
-    int16_t _x;
-    int16_t _y;
-    int16_t _z;
+    int8_t _x;
+    int8_t _y;
+    int8_t _z;
     float _step_factor;
     bool _highres;
     float _xg;

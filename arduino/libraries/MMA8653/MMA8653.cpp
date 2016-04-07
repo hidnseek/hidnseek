@@ -31,10 +31,19 @@ MMA8653::MMA8653(uint8_t addr)
 #define MMA_8653_CTRL_REG1_VALUE_ACTIVE 0x01
 #define MMA_8653_CTRL_REG1_VALUE_F_READ 0x02
 
-
 #define MMA_8653_CTRL_REG2 0x2B
 #define MMA_8653_CTRL_REG2_RESET 0x40
 
+#define MMA_8653_CTRL_REG3 0x2C
+#define MMA_8653_CTRL_REG3_VALUE_OD 0x01
+
+#define MMA_8653_CTRL_REG4 0x2D
+#define MMA_8653_CTRL_REG4_VALUE_INT_ASLP 0x80
+#define MMA_8653_CTRL_REG4_VALUE_INT_ENLP 0x10
+#define MMA_8653_CTRL_REG4_VALUE_INT_FFMT 0x04
+#define MMA_8653_CTRL_REG4_VALUE_INT_DRDY 0x01
+
+#define MMA_8653_CTRL_REG5 0x2E // 1: routed to INT1
 
 #define MMA_8653_PL_STATUS 0x10
 #define MMA_8653_PL_CFG 0x11
@@ -50,6 +59,7 @@ MMA8653::MMA8653(uint8_t addr)
 #define MMA_8653_FF_MT_CFG 0x15
 #define MMA_8653_FF_MT_CFG_ELE 0x80
 #define MMA_8653_FF_MT_CFG_OAE 0x40
+#define MMA_8653_FF_MT_CFG_XYZ 0x38
 
 
 #define MMA_8653_FF_MT_SRC 0x16
@@ -102,20 +112,20 @@ void MMA8653::_write_register(uint8_t b, uint8_t offset)
 
 void MMA8653::initMotion()
 {
-	_standby();
-	_write_register(MMA_8653_FF_MT_CFG, 0xF8);
-	_write_register(MMA_8653_FF_MT_THS, 0x8F);
-	_write_register(MMA_8653_FF_MT_COUNT, 0x0F);
-	_write_register(0x2C, 0x09);
-	_write_register(0x2D, 0x04);
-	_write_register(0x2E, 0x91);
-	_active();
+	standby();
+	_write_register(MMA_8653_FF_MT_CFG, MMA_8653_FF_MT_CFG_XYZ);
+	_write_register(MMA_8653_FF_MT_THS, 0x04);
+	_write_register(MMA_8653_FF_MT_COUNT, 0x00);
+	_write_register(MMA_8653_CTRL_REG3, MMA_8653_CTRL_REG3_VALUE_OD);
+	_write_register(MMA_8653_CTRL_REG4, MMA_8653_CTRL_REG4_VALUE_INT_FFMT);
+	_write_register(MMA_8653_CTRL_REG5, MMA_8653_CTRL_REG4_VALUE_INT_FFMT);
+	active();
 // return (_read_register(MMA_8653_PULSE_SRC) & MMA_8653_PULSE_SRC_EA);
 }
 
 
 
-void MMA8653::_standby()
+void MMA8653::standby()
 {
   uint8_t reg1 = 0x00;
   Wire.beginTransmission(_addr); // Set to status reg
@@ -134,7 +144,7 @@ void MMA8653::_standby()
 }
 
 
-void MMA8653::_active()
+void MMA8653::active()
 {
   uint8_t reg1 = 0x00;
   Wire.beginTransmission(_addr); // Set to status reg
@@ -147,13 +157,13 @@ void MMA8653::_active()
     reg1 = Wire.read();
   }
   Wire.beginTransmission(_addr); // Reset
-  Wire.write((uint8_t)MMA_8653_CTRL_REG1);
-  Wire.write(reg1 | MMA_8653_CTRL_REG1_VALUE_ACTIVE | (_highres ? 0 : MMA_8653_CTRL_REG1_VALUE_F_READ) | MMA_8653_ODR_50);
+  Wire.write(MMA_8653_CTRL_REG2);
+  Wire.write(0x09);
   Wire.endTransmission();
 
   Wire.beginTransmission(_addr); // Reset
-  Wire.write(MMA_8653_CTRL_REG2);
-  Wire.write(0x09);
+  Wire.write((uint8_t)MMA_8653_CTRL_REG1);
+  Wire.write(reg1 | MMA_8653_CTRL_REG1_VALUE_ACTIVE | (_highres ? 0 : MMA_8653_CTRL_REG1_VALUE_F_READ) | MMA_8653_ODR_6_25);
   Wire.endTransmission();
 }
 
@@ -217,11 +227,14 @@ void MMA8653::begin(bool highres, uint8_t scale)
   _highres = highres;
   
   _scale = scale;
+#ifdef _MMA_8653_FACTOR
   _step_factor = (_highres ? 0.0039 : 0.0156); // Base value at 2g setting
   if( _scale == 4 )
     _step_factor *= 2;
   else if (_scale == 8)
     _step_factor *= 4;
+#endif
+
   uint8_t wai = _read_register(0x0D); // Get Who Am I from the device.
   // return value for MMA8543Q is 0x3A
   
@@ -230,11 +243,15 @@ void MMA8653::begin(bool highres, uint8_t scale)
   Wire.write(MMA_8653_CTRL_REG2_RESET);
   Wire.endTransmission();
   delay(10); // Give it time to do the reset
-  _standby();
+  standby();
+
+#ifdef _MMA_8653_PORTRAIT_LANDSCAPE
   Wire.beginTransmission(_addr); // Set Portrait/Landscape mode
   Wire.write(MMA_8653_PL_CFG);
   Wire.write(0x80 | MMA_8653_PL_EN);
   Wire.endTransmission();
+#endif
+
   Wire.beginTransmission(_addr);
   Wire.write(MMA_8653_XYZ_DATA_CFG);
   if (_scale == 4 || _scale == 8)
@@ -242,7 +259,7 @@ void MMA8653::begin(bool highres, uint8_t scale)
   else // Default to 2g mode
     Wire.write((uint8_t)MMA_8653_2G_MODE);
   Wire.endTransmission();
-  _active();
+  active();
 }
 
 
@@ -276,17 +293,17 @@ float MMA8653::getZG()
   return _zg;
 }
 
-int16_t MMA8653::getX()
+int8_t MMA8653::getX()
 {
   return _x;
 }
 
-int16_t MMA8653::getY()
+int8_t MMA8653::getY()
 {
   return _y;
 }
 
-int16_t MMA8653::getZ()
+int8_t MMA8653::getZ()
 {
   return _z;
 }
@@ -324,57 +341,42 @@ byte MMA8653::update()
     _stat = Wire.read();
     if(_highres)
     {
-      //rx = (int16_t)((Wire.read() << 8) + Wire.read());
       _x = (int16_t)((Wire.read() << 8) + Wire.read());
-      _xg = (_x / 64) * _step_factor;
-      //ry = (int16_t)((Wire.read() << 8) + Wire.read());
       _y = (int16_t)((Wire.read() << 8) + Wire.read());
-      _yg = (_y / 64) * _step_factor;
-      //rz = (int16_t)((Wire.read() << 8) + Wire.read());
       _z = (int16_t)((Wire.read() << 8) + Wire.read());
+#ifdef _MMA_8653_FACTOR
+      _xg = (_x / 64) * _step_factor;
+      _yg = (_y / 64) * _step_factor;
       _zg = (_z / 64) * _step_factor;
+#endif
     }
     else
     {
-      /*
-      _xg = (int8_t)Wire.read() * _step_factor;
-      _yg = (int8_t)Wire.read() * _step_factor;
-      _zg = (int8_t)Wire.read() * _step_factor;
-      _x = 0;
-      _y = 0;
-      _z = 0;
-      */
-      _x = (int16_t)(Wire.read() << 8);
-      _x = _x/256;
-      _y = (int16_t)(Wire.read() << 8);
-      _y = _y/256;
-      _z = (int16_t)(Wire.read() << 8);
-      _z = _z/256;
+      _x = Wire.read();
+      _y = Wire.read();
+      _z = Wire.read();
+#ifdef _MMA_8653_FACTOR
       _xg = _x*_step_factor;
       _yg = _y*_step_factor;
       _zg = _z*_step_factor;
+#endif
     }
   }
   return error;
 }
 
-
 bool MMA8653::setInterrupt(uint8_t type, uint8_t pin, bool on)
 {
 	uint8_t current_value = _read_register(0x2D);
-
 
 	if(on)
 		current_value |= type;
 	else
 		current_value &= ~(type);
 
-
 	_write_register(0x2D, current_value);
 
-
 	uint8_t current_routing_value = _read_register(0x2E);
-
 
 	if (pin == 1) {
 		current_routing_value &= ~(type);
@@ -383,20 +385,13 @@ bool MMA8653::setInterrupt(uint8_t type, uint8_t pin, bool on)
 		current_routing_value |= type;
 	}
 
-
 	_write_register(0x2E, current_routing_value);
 }
-
 
 bool MMA8653::disableAllInterrupts()
 {
 	_write_register(0x2D, 0);
 }
-
-
-
-
-
 
 //end public methods
 
