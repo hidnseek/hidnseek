@@ -140,12 +140,11 @@ int powerDownLoop(int msgs) {
       }
       if (msgs == MSG_NO_MOTION || modeSport != forceSport) waitLoop = 0; // exit immediatly or stay in 5mn loop
     }
-    //if (i == 38 && detectMotion == 0 && msgs != MSG_NO_MOTION) i = waitLoop;  // Exit and enter in no motion mode
     i++;
     PORTD &= ~(1 << redLEDpin) & ~(1 << bluLEDpin);
   }
   detectMotion = (detectMotion > MOTION_MIN_NUMBER || forceSport) ? 1 : 0;
-  if (msgs == MSG_NO_MOTION && i > waitLoop) detectMotion = -1; // This mean a motion after a while
+  if (msgs == MSG_NO_MOTION && waitLoop == 0) detectMotion = -1; // This mean a motion after a while
   if (detectMotion > 0 && !GPSactive) GPSactive = gpsInit();
   start = millis();
   loopGPS = syncSat = noSat = 0;
@@ -231,7 +230,7 @@ int main(void)
       detectMotion = powerDownLoop(MSG_POSITION);
     }
 
-    if ( loopGPS >= 30 || noSat >= 120) {
+    if ( loopGPS > 16 || noSat > 120) {
       detectMotion = powerDownLoop(MSG_NO_GPS);
     }
 

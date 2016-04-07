@@ -103,7 +103,7 @@ bool gpsProcess()
       serialString(PSTR(", lon="));
       Serial.println(p.lon, 7);
     } else if (abs(p.lat) > 2 && abs(p.lon) > 2) distance = gps.distance_between(p.lat, p.lon, previous_lat, previous_lon);
-    if (newGpsData && distance < 15 && syncSat > 20 && forceSport == 0) {
+    if (newGpsData && distance < 5 && syncSat > 20 && forceSport == 0) {
       syncSat = 255;
     }
 
