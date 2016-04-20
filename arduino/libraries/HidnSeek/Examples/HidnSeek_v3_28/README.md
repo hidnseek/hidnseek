@@ -56,6 +56,6 @@ $array['bat']=($cpx >> 3 ) & 0xff;
 $array['mod']=$cpx & 7;
 
 header('Content-type: application/json');
-echo json_encode($array);
+echo json_encode($array, JSON_PRETTY_PRINT);
 
 ```
