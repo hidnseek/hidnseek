@@ -28,28 +28,34 @@ function hexTo32Integer($strHex) {
   return $integer32[1];
 }
 
+$array = array();
+
 // mlat and mlon are latitude and longitude GPS coordonates
-$mlat=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),0,8));
-$mlon=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),8,8));
+$array['mlat']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),0,8));
+$array['mlon']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),8,8));
 
 // cpx is optionnal data
 $cpx=hexTo32Integer(substr(htmlspecialchars($_REQUEST["Payload"]),16,8));
 
 // alt is altitude in meters (from GPGGA sentence)
-$alt=0x1fff & $cpx >> 19;
+$array['alt']=0x1fff & $cpx >> 19;
 
 // speed in kph (from GPRMC sentence)
-$speed=($cpx >> 12) & 0xff;
-if ($speed > 102) $speed = ($speed - 94) * 16;
-else if ($speed > 90) $speed = ($speed - 60) * 3;
+$array['speed']=($cpx >> 12) & 0xff;
+if ($array['speed'] > 102) $array['speed'] = ($array['speed'] - 94) * 16;
+else if ($array['speed'] > 90) $array['speed'] = ($array['speed'] - 60) * 3;
 
 // cap is course direction N,E,S,W from GPRMC sentence
-$cap = ($cpx >> 10) & 3;
+$array['cap'] = ($cpx >> 10) & 3;
 
 // bat is battery percent remainning voltage
-$bat=($cpx >> 3 ) & 0xff;
+$array['bat']=($cpx >> 3 ) & 0xff;
 
 /* mod is message type (MSG_POSITION = 0-3, MSG_NO_MOTION = 4,
    MSG_NO_GPS = 5, MSG_MOTION_ALERT = 6, MSG_WEAK_BAT = 7) */
-$mod=$cpx & 7;
+$array['mod']=$cpx & 7;
+
+header('Content-type: application/json');
+echo json_encode($array);
+
 ```
