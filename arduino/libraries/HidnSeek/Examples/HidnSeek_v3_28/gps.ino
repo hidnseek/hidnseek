@@ -63,7 +63,7 @@ bool gpsProcess()
       newSerialData = true;
       waitime = 100;
       start = millis();
-      digitalWrite(redLEDpin, HIGH);
+      redLEDon;
     }
     while (Serial.available())
     {
@@ -121,7 +121,7 @@ bool gpsProcess()
 
   //printData(newGpsData); // For debug purpose this use 2Ko of flash program
 
-  digitalWrite(redLEDpin, LOW);
+  redLEDoff;
   return newSerialData;
 }
 

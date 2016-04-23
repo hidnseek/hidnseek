@@ -60,7 +60,6 @@ enum {
 #define accINT           3     // PB0 Accelerometer Interruption
 #define usbDM            4     // PD4
 #define txSigfox         5     // PD5 TX Serial to Sigfox modem
-#define piezzo           6     // PD6 Piezzo Output
 #define bluLEDpin        6     // PD6 Piezzo Output
 #define redLEDpin        7     // PD7 Red LED Status
 #define rxSigfox         8     // PD3 RX Serial from Sigfox modem
@@ -88,6 +87,11 @@ enum {
 #define DIGITAL_OUTPUT ((1 << shdPin) | (1 << redLEDpin) | (1 << bluLEDpin) | (1 << rxSigfox) | (1 << rstPin))
 /*********************************************************************/
 
+#define blueLEDon  PORTD |= (1 << bluLEDpin)
+#define blueLEDoff PORTD &= ~(1 << bluLEDpin)
+#define redLEDon   PORTD |= (1 << redLEDpin)
+#define redLEDoff  PORTD &= ~(1 << redLEDpin)
+
 unsigned long fix_age = 0;
 int year = 0;
 byte month, day, hour, minute, second, hundredths = 0;
@@ -106,13 +110,13 @@ uint8_t limitSport = 0;
 uint8_t forceSport = 0;
 
 unsigned long start = 0;
-uint8_t today = 0;
-uint8_t MsgCount = 0;
+uint8_t  today = 0;
+uint8_t  MsgCount = 0;
 
-byte accelPosition;
-int8_t detectMotion = 1;
-unsigned int batteryValue;
-byte batteryPercent = 0;
+byte     accelPosition;
+int8_t   detectMotion = 1;
+uint16_t batteryValue;
+byte     batteryPercent = 0;
 
 uint16_t alt = 0;
 uint16_t spd = 0;

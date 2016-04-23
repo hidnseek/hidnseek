@@ -64,5 +64,5 @@ void dumpEEprom() {
     Serial.print(" ");
   }
   MsgCount = EEPROM.read(today);
-  Serial.println("");
+  Serial.println();
 }

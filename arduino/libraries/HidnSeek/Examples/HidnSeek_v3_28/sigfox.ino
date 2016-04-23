@@ -18,13 +18,12 @@ bool initSigFox() {
   unsigned long previousMillis = millis();
   while ((uint16_t) (millis() - previousMillis) < 6000) {
     if (HidnSeek.begin() == 3) {
-      //Serial.println(millis() - previousMillis);
       Serial.println(HidnSeek.getID(), HEX);
       return true;
     }
     else delay(200);
   }
-  Serial.println("Fail");
+  serialString(PSTR("Fail\r\n"));
   return false;
 }
 

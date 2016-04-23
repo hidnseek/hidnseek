@@ -17,8 +17,8 @@
 #ifndef HIDNSEEK_H
 #define HIDNSEEK_H
 
-#include <Arduino.h>
-#include <SoftwareSerial.h>
+#include "Arduino.h"
+#include "SoftwareSerial.h"
 
 class HidnSeek {
     public:
@@ -46,6 +46,7 @@ class HidnSeek {
         uint8_t _rxPin;
         uint8_t _txPin;
         uint8_t _nextReturn();
+        void _command(PGM_P s);
 };
 
 #endif

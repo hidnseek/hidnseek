@@ -105,9 +105,7 @@ bool HidnSeek::send(const void* data, uint8_t len) {
     _lastSend = millis();
 
     _serial.write((uint8_t)'\0');
-    _serial.write((uint8_t)'S');
-    _serial.write((uint8_t)'F');
-    _serial.write((uint8_t)'M');
+    _command(PSTR("SFM"));
     _serial.write(len);
     for(uint8_t i = 0; i < len; ++i) {
         _serial.write(bytes[i]);
@@ -148,13 +146,16 @@ uint8_t HidnSeek::getRev() {
     }
 }
 
+void HidnSeek::_command (PGM_P s) {
+  char c;
+  while ((c = pgm_read_byte(s++)) != 0) {
+    _serial.print(c);
+  }
+}
+
 unsigned long HidnSeek::getID() {
     _serial.write((uint8_t)'\0');
-    _serial.write((uint8_t)'S');
-    _serial.write((uint8_t)'F');
-    _serial.write((uint8_t)'I');
-    _serial.write((uint8_t)'D');
-    _serial.write((uint8_t)';');
+    _command(PSTR("SFID;"));
 
     //Response is [byte1, byte2, ..., byteN, 'O', 'K']
     uint8_t response[8] = {0};
@@ -170,35 +171,19 @@ unsigned long HidnSeek::getID() {
     unsigned long id = 0;
 
     for(uint8_t j = 0; j < i-2; ++j) {
-        //id += response[j] << ((3-j) * 8);
         id = (id << 8) + response[j];
     }
 
     return id;
 }
+
 //Power value:
-//0 -25 -30 dBm
-//1 0dBm
-//2 14dBm
-//3 16dBm
-//4 18dBm
-//5 Max (18-19dBm)
 bool HidnSeek::setPower(uint8_t power) {
-/*
-    power = power % 6; //It's 0-5
-    _serial.write((uint8_t)'\0');
-    _serial.write((uint8_t)'S');
-    _serial.write((uint8_t)'F');
-    _serial.write((uint8_t)'G');
-    _serial.write(power);
-    _serial.write((uint8_t)';');
-*/
     // 13,9dBm with 0,4,47 for the parameter
-    if (power > 0) _serial.println("AT$MT=0,4,127"); else {
-      // _serial.println("AT$MT=0,0,0");
-      // delay(100);
-      _serial.println("ATZ");
+    if (power > 0) _command(PSTR("AT$MT=0,4,47")); else {
+      _command(PSTR("ATZ"));
     }
+    _serial.println();
 
     char dataRX[5] = "";
     int  length    = 3;
@@ -224,12 +209,10 @@ bool HidnSeek::setPower(uint8_t power) {
         }
     }
     if (strcmp (dataRX,"OK") != 0) return false; else return true;
-
-    //return _nextReturn() == OK;
 }
 
 uint8_t HidnSeek::_nextReturn() {
-    while(!_serial.available());
+    while(!_serial.available()) if (millis()-_lastSend > 2000) PORTD &= ~(1 << 7);
     char fstChar = _serial.read();
     while(_serial.read() != ';');
     return fstChar;

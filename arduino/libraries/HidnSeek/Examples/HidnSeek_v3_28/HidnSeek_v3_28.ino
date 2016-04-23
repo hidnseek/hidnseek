@@ -70,11 +70,6 @@ void NoflashRed() {
   PORTD |= (1 << redLEDpin) | (forceSport << bluLEDpin);
 }
 
-void powerDown(period_t sleepDuration) {
-  Serial.flush();
-  LowPower.powerDown(sleepDuration, ADC_OFF, BOD_OFF);
-}
-
 int powerDownLoop(int msgs) {
   if (batterySense()) shutdownSys(); // else digitalWrite(shdPin, HIGH);
   if (forceSport) {
@@ -179,19 +174,19 @@ int main(void)
     flashRed(1);
   }
   if (accelPresent = initMems()) {
-    powerDown(SLEEP_500MS);
+    delay(500);
     if (accelStatus()) flashRed(2);
   }
 
   if (baromPresent = bmp180.init()) {
-    powerDown(SLEEP_500MS);
+    delay(500);
     bmp180Measure(&Temp, &Press);
     flashRed(3);
   }
   bmp180Print();
 
   if (initSigFox()) {
-    powerDown(SLEEP_500MS);
+    delay(500);
     flashRed(4);
   } else {
     PORTD |= (1 << bluLEDpin);
@@ -212,17 +207,17 @@ int main(void)
   while (1) {
 
     if ((uint16_t) (millis() - start) >= 4000) {
-      PORTD |= (1 << bluLEDpin);
+      blueLEDon;
       delay(100);
       accelStatus();
-      PORTD &= ~(1 << bluLEDpin);
+      blueLEDoff;
       loopGPS++;
       start = millis();
     }
 
     // if a sentence is received, we can check the checksum, parse it...
     if (detectMotion == 1) {
-      if (gpsProcess()) powerDown(SLEEP_500MS);
+      if (gpsProcess()) LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
     }
 
     // Let 2mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
