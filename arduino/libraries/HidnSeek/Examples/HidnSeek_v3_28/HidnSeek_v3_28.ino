@@ -84,7 +84,7 @@ int powerDownLoop(int msgs) {
   }
 
   accelStatus(); // record the current angle
-  if (msgs == MSG_POSITION && spd > 15 && noSat == 0) detectMotion = MOTION_MIN_NUMBER << 1; else detectMotion = 0;
+  if (msgs == MSG_POSITION && spd > 5 && noSat == 0) detectMotion = MOTION_MIN_NUMBER << 1; else detectMotion = 0;
 
   // Loop duration 8s. 75x 10mn, 150x 20mn,
   static uint8_t countNoMotion;
@@ -221,11 +221,11 @@ int main(void)
     }
 
     // Let 2mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
-    if ( syncSat >= 30 && noSat == 0) {
+    if ((( syncSat >= 30 && (spd < 11 || spd > 80)) || syncSat >= 60) && noSat == 0) {
       detectMotion = powerDownLoop(MSG_POSITION);
     }
 
-    if ( loopGPS > 16 || noSat > 120) {
+    if ( loopGPS > 30 || noSat > 120) {
       detectMotion = powerDownLoop(MSG_NO_GPS);
     }
 
