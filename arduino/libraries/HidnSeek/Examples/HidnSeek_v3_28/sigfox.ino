@@ -46,10 +46,6 @@ void sendSigFox(byte msgType) {
     p.cpx &= ~(7 << 0);
     p.cpx |= (uint32_t) (  7 & msgType); // mode (2bits)
   }
-  else {
-    previous_lat = p.lat;
-    previous_lon = p.lon;
-  }
   decodPayload();
   unsigned long previousMillis = millis();
   if ( !(msgType > 0 && airPlanePress) && !airPlaneSpeed) {

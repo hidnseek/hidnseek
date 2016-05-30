@@ -110,7 +110,8 @@ int powerDownLoop(int msgs) {
     }
     if (countNoMotion < 3) countNoMotion++;
   } else {
-    waitLoop = (PERIOD_COUNT >> forceSport) - loopGPS;  // 10mn loop: 6mn sleep + 4mn for GPS
+    // waitLoop = (PERIOD_COUNT >> forceSport) - loopGPS;
+    waitLoop = PERIOD_COUNT - loopGPS;  // 10mn loop: 6mn sleep + 4mn for GPS
   }
 
   unsigned int i = 0;
@@ -221,7 +222,7 @@ int main(void)
     }
 
     // Let 2mn to acquire GPS position otherwise go to sleep until accelerometer wake up.
-    if ((( syncSat >= 30 && (spd < 11 || spd > 80)) || syncSat >= 60) && noSat == 0) {
+    if ((( syncSat >= 64 && (spd < 11 || spd > 80)) || syncSat >= 128) && noSat == 0) {
       detectMotion = powerDownLoop(MSG_POSITION);
     }
 

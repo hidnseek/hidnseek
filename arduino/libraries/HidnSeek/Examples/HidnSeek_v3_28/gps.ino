@@ -88,34 +88,11 @@ bool gpsProcess()
 
   if (newGpsData) { // computeData
     gps.f_get_position(&p.lat, &p.lon, &fix_age);
-    if (fix_age == TinyGPS::GPS_INVALID_AGE || fix_age > 5000) fix_age = 1024;
     sat = gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites();
     alt = abs(round(gps.f_altitude()));
     spd = round(gps.f_speed_kmph());
-
-    distance = 1000;
-    if (fix_age >> 9) {
-      newGpsData = false; // No a real fix detected
-      p.lat = previous_lat;
-      p.lon = previous_lon;
-      serialString(PSTR("recover lat="));
-      Serial.print(p.lat, 7);
-      serialString(PSTR(", lon="));
-      Serial.println(p.lon, 7);
-    } else if (abs(p.lat) > 2 && abs(p.lon) > 2) distance = gps.distance_between(p.lat, p.lon, previous_lat, previous_lon);
-    if (newGpsData && distance < 5 && syncSat > 20 && forceSport == 0) {
-      syncSat = 255;
-    }
-
-    if (newGpsData) {
-      if (sat < 4 || (abs(p.lat) < 2 && abs(p.lon) < 2)) noSat++; 
-      else {
-        noSat = 0;
-        syncSat++; // else syncSat = 0; // increase global variable
-      }
-      if (sat > 7) syncSat ++;
-    }
-    else noSat++;
+    syncSat += sat;
+    noSat = 0;
   }
   else noSat++;
 
@@ -174,7 +151,7 @@ void makePayload() {
     if (spd < 120) airPlaneSpeed = false;
 
     if (alt > 4096) alt = (uint16_t)(alt / 16) + 3840; // 16m step after 4096m
-    if (alt > 8191) alt = 8191;
+    if (alt > 8191) alt = 8191;                        // 69632m is the new limit ;)
 
     if (spd > 127) spd = (uint16_t)(spd / 16) + 94; // 16Km/h step after 127Km/h
     else if (spd > 90) spd = (uint16_t)(spd / 3) + 60; // 3Km/h step after 90Km/h
@@ -186,6 +163,7 @@ void makePayload() {
   p.cpx |= (uint32_t) spd << 12; // send in Km/h
   p.cpx |= (uint32_t) cap << 10;  // send N/E/S/W
   p.cpx |= (uint32_t) ( 127 & batteryPercent) << 3; // bat (7bits)
+  if (sat > 8) sat = 8;
   p.cpx |= (uint32_t) 3 & (sat / 4); // sat range is 0 to 14
 }
 

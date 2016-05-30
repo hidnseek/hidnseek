@@ -124,9 +124,6 @@ uint8_t  sat = 0;
 uint8_t  syncSat = 0;
 uint8_t  noSat = 0;
 
-float previous_lat = 0;
-float previous_lon = 0;
-
 // BMP180 measurements
 float    Temp = 0;
 uint16_t Press = 0;
