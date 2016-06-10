@@ -98,9 +98,7 @@ int powerDownLoop(int msgs) {
   }
   gpsStandby();
 
-  if (syncSat < 255) {
-    sendSigFox(msgs); // if not arround house location send new position
-  }
+  sendSigFox(msgs); // if not arround house location send new position
 
   accelStatus(); // record the current angle
   if (msgs == MSG_POSITION && spd > 5 && noSat == 0) {
@@ -159,8 +157,9 @@ int powerDownLoop(int msgs) {
         sleepDuration = SLEEP_8S;
         i = i >> 1;
       }
-      if ( ( (detectMotion >= MOTION_MIN_NUMBER) && (i > DOG_COUNT) && forceSport) || (msgs == MSG_NO_MOTION || modeSport != forceSport) ) waitLoop = 0; // exit immediatly or stay in 5mn loop
+      if  (msgs == MSG_NO_MOTION || modeSport != forceSport) waitLoop = 0; // exit immediatly or stay in 5mn loop
     }
+    if ( (detectMotion >= MOTION_MIN_NUMBER) && (i > DOG_COUNT) && forceSport)  waitLoop = 0; // exit immediatly or stay in 5mn loop
     i++;
     PORTD &= ~(1 << redLEDpin) & ~(1 << bluLEDpin);
   }

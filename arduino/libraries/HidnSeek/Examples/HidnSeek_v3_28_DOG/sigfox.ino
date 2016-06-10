@@ -45,7 +45,7 @@ void sendSigFox(byte msgType) {
   }
   decodPayload();
   unsigned long previousMillis = millis();
-  if ( !(msgType > 0 && airPlanePress) && !airPlaneSpeed) {
+  if ( !(msgType > 0 && airPlanePress) && !airPlaneSpeed && syncSat != 255) {
     HidnSeek.send(&p, sizeof(p));
     stepMsg(); // Init the message number per day and time usage counters
     while ((uint16_t) (millis() - previousMillis) < 6000) delay(100);
