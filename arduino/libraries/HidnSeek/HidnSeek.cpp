@@ -1,12 +1,12 @@
 /* This file started from Akeru library http://akeru.cc copyleft Snootlab, 2014
  and has been modified for HidnSeek by Stephane D, 2014.
- 
+
  This library is free software: you can redistribute it and/or
  modify it under the terms of the GNU General Public License as published
  by the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
 
- This library is distributed in the hope that it will be useful, 
+ This library is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
@@ -23,7 +23,7 @@ HidnSeek::HidnSeek(uint8_t rxPin, uint8_t txPin) :
     _lastSend = -1;
 }
 
-HidnSeek::~HidnSeek() {	
+HidnSeek::~HidnSeek() {
 }
 
 int HidnSeek::begin() {
@@ -80,7 +80,7 @@ bool HidnSeek::isReady() {
 	// You've been warned!
 
     unsigned long currentTime = millis();
-    if(currentTime >= _lastSend && ((unsigned long)(currentTime - _lastSend) <= 60000UL)) {
+    if(currentTime >= _lastSend && ((unsigned long)(currentTime - _lastSend) <= 600000UL)) {
         return false;
     }
 
@@ -259,4 +259,3 @@ void HidnSeek::checkBattery() {
         if (!_grst) PORTB &= ~(1<<2);
     }
 }
-
