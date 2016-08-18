@@ -1,6 +1,6 @@
 /*
  * Barometer.h
- * A library for barometer
+ * A library for barometer bmp180
  *
  * Copyright (c) 2012 seeed technology inc.
  * Website    : www.seeed.cc
@@ -13,6 +13,12 @@
  *
  * The MIT License (MIT)
  *
+ * BMP280 barometric pressure sensor library for the Arduino
+ * microcontroller.
+ *
+ * uses the I2C library from Wayne Truchsess
+ *
+ * Copyright (C) 2016 Edwin Croissant
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,21 +42,26 @@
 #define __BAROMETER_H__
 
 #include <Arduino.h>
-#include <Wire.h>
+#include <I2C.h>
 
 const unsigned char OSS = 0;
 #define BMP085_ADDRESS 0x77
+#define BMP280_ADDRESS 0x77
 
 class Barometer
 {
     public:
     bool init(void);
     long PressureCompensate;
-    float bmp085GetTemperature(unsigned short ut);
-    long bmp085GetPressure(unsigned long up);
+    float bmp085GetTemperature();
+    long bmp085GetPressure();
     float calcAltitude(float pressure);
     unsigned short bmp085ReadUT(void);
     unsigned long bmp085ReadUP(void);
+
+	bool begin();
+	uint32_t getPressure(void);
+	int16_t getLastTemperature(void);
 
     private:
 
@@ -65,10 +76,29 @@ class Barometer
     short mb;
     short mc;
     short md;
-    char bmp085Read(unsigned char address);
-    short bmp085ReadInt(unsigned char address);
-    void writeRegister(short deviceAddress, byte address, byte val);
-    short readRegister(short deviceAddress, byte address);
+    uint8_t bmp085Read(uint8_t address);
+    short bmp085ReadInt(uint8_t address);
+
+    //uint8_t _I2C_Addr;
+	int16_t _lastTemp;
+
+	union {
+		uint8_t calArray[24];
+		struct {
+			uint16_t dig_T1;
+			int16_t dig_T2, dig_T3;
+			uint16_t dig_P1;
+			int16_t dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;
+		};
+	} _calData;
+
+	enum BMP280registers {
+		calData = 0x88, id = 0xD0, control = 0xF4, config = 0xF5, data = 0xF7
+	};
+
+	enum BMP280constants {
+		deviceId = 0x58
+	};
 };
 
 #endif

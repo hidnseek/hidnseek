@@ -32,12 +32,10 @@
  */
 
 #include "Barometer.h"
-#include <Wire.h>
-#include <Arduino.h>
 
 bool Barometer::init(void)
 {
-    Wire.begin();
+    I2c.begin();
     ac1 = bmp085ReadInt(0xAA);
     ac2 = bmp085ReadInt(0xAC);
     ac3 = bmp085ReadInt(0xAE);
@@ -54,32 +52,22 @@ bool Barometer::init(void)
 
 // Read 1 byte from the BMP085 at 'address'
 // Return: the read byte;
-char Barometer::bmp085Read(unsigned char address)
+uint8_t Barometer::bmp085Read(uint8_t address)
 {
-    //Wire.begin();
-    unsigned char data;
-    Wire.beginTransmission(BMP085_ADDRESS);
-    Wire.write(address);
-    Wire.endTransmission();
-
-    Wire.requestFrom(BMP085_ADDRESS, 1);
-    while(!Wire.available());
-    return Wire.read();
+    I2c.read(BMP085_ADDRESS, address, 1);
+    return I2c.receive();
 }
 
 // Read 2 bytes from the BMP085
 // First byte will be from 'address'
 // Second byte will be from 'address'+1
-short Barometer::bmp085ReadInt(unsigned char address)
+short Barometer::bmp085ReadInt(uint8_t address)
 {
     unsigned char msb, lsb;
-    Wire.beginTransmission(BMP085_ADDRESS);
-    Wire.write(address);
-    Wire.endTransmission();
-    Wire.requestFrom(BMP085_ADDRESS, 2);
-    while(Wire.available()<2);
-    msb = Wire.read();
-    lsb = Wire.read();
+    if (I2c.read(BMP085_ADDRESS, address, 2) == 0) {
+        msb = I2c.receive();
+        lsb = I2c.receive();
+    }
     return (short) msb<<8 | lsb;
 }
 
@@ -87,56 +75,29 @@ short Barometer::bmp085ReadInt(unsigned char address)
 unsigned short Barometer::bmp085ReadUT()
 {
     unsigned short ut;
-    Wire.beginTransmission(BMP085_ADDRESS);
-    Wire.write(0xF4);
-    Wire.write(0x2E);
-    Wire.endTransmission();
+    I2c.write(BMP085_ADDRESS, 0xF4, 0x2E);
     delay(5);
     ut = bmp085ReadInt(0xF6);
     return ut;
 }
+
 // Read the uncompensated pressure value
 unsigned long Barometer::bmp085ReadUP()
 {
-    unsigned char msb, lsb, xlsb;
+    uint8_t msb, lsb, xlsb;
     unsigned long up = 0;
-    Wire.beginTransmission(BMP085_ADDRESS);
-    Wire.write(0xF4);
-    Wire.write(0x34 + (OSS<<6));
-    Wire.endTransmission();
+    I2c.write(BMP085_ADDRESS, 0xF4, 0x34 + (OSS<<6));
     delay(2 + (3<<OSS));
 
     // Read register 0xF6 (MSB), 0xF7 (LSB), and 0xF8 (XLSB)
-    msb = bmp085Read(0xF6);
-    lsb = bmp085Read(0xF7);
-    xlsb = bmp085Read(0xF8);
+    if (I2c.read(BMP085_ADDRESS, 0xF6, 3) == 0) {
+        msb = I2c.receive();
+        lsb = I2c.receive();
+        xlsb = I2c.receive();
+    }
+    
     up = (((unsigned long) msb << 16) | ((unsigned long) lsb << 8) | (unsigned long) xlsb) >> (8-OSS);
     return up;
-}
-
-void Barometer::writeRegister(short deviceAddress, byte address, byte val)
-{
-    Wire.beginTransmission(deviceAddress); // start transmission to device
-    Wire.write(address);       // send register address
-    Wire.write(val);         // send value to write
-    Wire.endTransmission();     // end transmission
-}
-
-short Barometer::readRegister(short deviceAddress, byte address)
-{
-    short v;
-    Wire.beginTransmission(deviceAddress);
-    Wire.write(address); // register to read
-    Wire.endTransmission();
-
-    Wire.requestFrom(deviceAddress, 1); // read a byte
-
-    while(!Wire.available()) {
-        // waiting
-    }
-
-    v = Wire.read();
-    return v;
 }
 
 float Barometer::calcAltitude(float pressure)
@@ -149,10 +110,10 @@ float Barometer::calcAltitude(float pressure)
     return C;
 }
 
-float Barometer::bmp085GetTemperature(unsigned short ut)
+float Barometer::bmp085GetTemperature()
 {
     long x1, x2;
-
+    unsigned short ut = bmp085ReadUT();
     x1 = (((long)ut - (long)ac6)*(long)ac5) >> 15;
     x2 = ((long)mc << 11)/(x1 + md);
     PressureCompensate = x1 + x2;
@@ -163,8 +124,9 @@ float Barometer::bmp085GetTemperature(unsigned short ut)
     return temp;
 }
 
-long Barometer::bmp085GetPressure(unsigned long up)
+long Barometer::bmp085GetPressure()
 {
+    unsigned long up = bmp085ReadUP();
     long x1, x2, x3, b3, b6, p;
     unsigned long b4, b7;
     b6 = PressureCompensate - 4000;
@@ -180,16 +142,116 @@ long Barometer::bmp085GetPressure(unsigned long up)
     b4 = (ac4 * (unsigned long)(x3 + 32768))>>15;
 
     b7 = ((unsigned long)(up - b3) * (50000>>OSS));
-    if (b7 < 0x80000000)
-    p = (b7<<1)/b4;
+    if (b7 < 0x80000000UL)
+        p = (b7<<1)/b4;
     else
-    p = (b7/b4)<<1;
+        p = (b7/b4)<<1;
 
     x1 = (p>>8) * (p>>8);
     x1 = (x1 * 3038)>>16;
     x2 = (-7357 * p)>>16;
     p += (x1 + x2 + 3791)>>4;
 
-    long temp = p;
-    return temp;
+    return p;
+}
+
+boolean Barometer::begin() {
+
+	/* check device */
+	if (I2c.read(BMP280_ADDRESS, id, 1) != 0)
+		return false;
+	if (I2c.receive() != deviceId)
+		return false;
+
+	/* read the calibration data*/
+	if (I2c.read(BMP280_ADDRESS, calData, 24) != 0)
+		return false;
+	for (int i = 0; i < 24; ++i) {
+		_calData.calArray[i] = I2c.receive();
+	}
+
+	/* set the mode */
+	if (I2c.write(BMP280_ADDRESS, config, 0b10100000) != 0)
+		return false;
+	if (I2c.write(BMP280_ADDRESS, control, 0b00100111) != 0)
+		return false;
+
+	return true;
+}
+
+/*
+ * Returns the pressure in Pascal.
+*/
+uint32_t Barometer::getPressure(void) {
+	int32_t var1, var2, t_fine;
+	uint32_t p;
+
+	union {
+		int32_t int32;
+		struct {
+			uint8_t XLSB, LSB, MSB;
+		};
+	} UT, UP; //uncompensated temperature and uncompensated pressure
+
+	if (I2c.read(BMP280_ADDRESS, data, 6) != 0) {
+		_lastTemp = -27315;
+		return 0;
+	}
+
+	UP.MSB = I2c.receive();
+	UP.LSB = I2c.receive();
+	UP.XLSB = I2c.receive();
+	UT.MSB = I2c.receive();
+	UT.LSB = I2c.receive();
+	UT.XLSB = I2c.receive();
+
+	UT.int32 >>= 4;
+	UP.int32 >>= 4;
+
+	var1 = ((((UT.int32 >> 3) - ((int32_t) _calData.dig_T1 << 1)))
+			* ((int32_t) _calData.dig_T2)) >> 11;
+
+	var2 = (((((UT.int32 >> 4) - ((int32_t) _calData.dig_T1))
+			* ((UT.int32 >> 4) - ((int32_t) _calData.dig_T1))) >> 12)
+			* ((int32_t) _calData.dig_T3)) >> 14;
+
+	t_fine = var1 + var2;
+	_lastTemp = (t_fine * 5 + 128) >> 8;
+
+	var1 = (t_fine >> 1) - (int32_t) 64000;
+
+	var2 = (((var1 >> 2) * (var1 >> 2)) >> 11) * ((int32_t) _calData.dig_P6);
+
+	var2 = var2 + ((var1 * ((int32_t) _calData.dig_P5)) << 1);
+	var2 = (var2 >> 2) + (((int32_t) _calData.dig_P4) << 16);
+	var1 = (((_calData.dig_P3 * (((var1 >> 2) * (var1 >> 2)) >> 13)) >> 3)
+			+ ((((int32_t) _calData.dig_P2) * var1) >> 1)) >> 18;
+	var1 = ((((32768 + var1)) * ((int32_t) _calData.dig_P1)) >> 15);
+
+	if (var1 == 0) {
+		return 0; // avoid exception caused by division by zero
+	}
+
+	p = (((uint32_t) (((int32_t) 1048576) - UP.int32) - (var2 >> 12))) * 3125;
+
+	if (p < 0x80000000) {
+		p = (p << 1) / ((uint32_t) var1);
+	} else {
+		p = (p / (uint32_t) var1) * 2;
+	}
+
+	var1 = (((int32_t) _calData.dig_P9)
+			* ((int32_t) (((p >> 3) * (p >> 3)) >> 13))) >> 12;
+	var2 = (((int32_t) (p >> 2)) * ((int32_t) _calData.dig_P8)) >> 13;
+	p = (uint32_t) ((int32_t) p + ((var1 + var2 + _calData.dig_P7) >> 4));
+
+	return p; // in Pascal
+}
+
+/*
+ * Retrieves the sensor temperature in centiCelsius as
+ * measured during the pressure reading.
+*/
+int16_t Barometer::getLastTemperature(void) {
+	return _lastTemp;
 }

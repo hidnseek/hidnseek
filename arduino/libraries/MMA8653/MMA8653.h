@@ -15,13 +15,10 @@
 #ifndef MMA8653_H
 #define MMA8653_H
 
-
 #define MMA_8653_DEFAULT_ADDRESS 0x1D
 
-
 #include "Arduino.h"
-#include "Wire.h"
-
+#include "I2C.h"
 
 ////////////////////////////////////////////
 // uncomment to add portrait/Landscape interrupt
@@ -32,7 +29,6 @@
 
 ////////////////////////////////////////////
 // Interrupts
-
 
 // Auto SLEEP/WAKE interrupt
 #define INT_ASLP   (1<<7)
@@ -46,9 +42,6 @@
 #define INT_FF_MT  (1<<2)
 // Data ready interrupt
 #define INT_DRDY   (1<<0)
-
-
-
 
 class MMA8653
 {
