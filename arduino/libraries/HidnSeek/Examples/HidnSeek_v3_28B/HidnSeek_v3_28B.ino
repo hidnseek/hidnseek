@@ -69,7 +69,7 @@ void initGPIO()
   // Set output to 0 for not used Pads
   PORTB = (DIGITAL_PULLUP >> 8) & 0xff;
   DDRB  = (DIGITAL_OUTPUT >> 8) & 0xff;
-  PORTC = DDRC_MASK;
+  PORTC = DDRC_MASK;                    // Change to 0x00 for ST1A Hardware board
   DDRC  = DDRC_MASK;
   PORTD = DIGITAL_PULLUP & 0xff;
   DDRD  = DIGITAL_OUTPUT & 0xff;
