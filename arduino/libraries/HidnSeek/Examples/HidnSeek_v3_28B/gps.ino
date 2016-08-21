@@ -150,11 +150,15 @@ void makePayload() {
     if (alt > 4096) alt = (uint16_t)(alt / 16) + 3840; // 16m step after 4096m
     if (alt > 8191) alt = 8191;                        // 69632m is the new limit ;)
 
-    if (spd > 127) spd = (uint16_t)(spd / 16) + 94; // 16Km/h step after 127Km/h
+    if (spd > 127) spd = (uint16_t)(spd / 16) + 94;    // 16Km/h step after 127Km/h
     else if (spd > 90) spd = (uint16_t)(spd / 3) + 60; // 3Km/h step after 90Km/h
-    if (spd > 126) spd = 127;      // limit is 528Km/h
+    if (spd > 126) spd = 127;                          // limit is 528Km/h
 
-    cap = (gps.course() / 90) % 4;
+    if (alt < 16) {             // invert cap and altitude when altitude < 16 meters
+      cap = alt / 4;
+      alt = (uint16_t) (gps.course() / 10);            // cap is in deci degrees 
+    } else cap = (gps.course() / 9000) % 4;
+
   } else cap = (accelPosition < 3) ? accelPosition : 3;
 
   p.cpx = (uint32_t) alt << 19;
