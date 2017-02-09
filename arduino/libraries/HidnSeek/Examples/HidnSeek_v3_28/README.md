@@ -55,6 +55,10 @@ $array['bat']=($cpx >> 3 ) & 0xff;
    MSG_NO_GPS = 5, MSG_MOTION_ALERT = 6, MSG_WEAK_BAT = 7) */
 $array['mod']=$cpx & 7;
 
+// Decompress altitude value. After 4096m, each values represent 16m. Maximum altitude
+// measured during weather balloon journey on October 2016 has been 32544m.
+if ($array['alt'] > 4096 && $array['mod'] < 3) $array['alt'] = ($array['alt']-3840)*16;
+
 header('Content-type: application/json');
 echo json_encode($array, JSON_PRETTY_PRINT);
 
