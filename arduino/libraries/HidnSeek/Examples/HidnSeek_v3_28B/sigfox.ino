@@ -19,7 +19,6 @@ bool initSigFox() {
   while ((uint16_t) (millis() - previousMillis) < 6000) {
     if (HidnSeek.begin() == 3) {
       Serial.println(HidnSeek.getID(), HEX);
-      HidnSeek.noEcho();
       return true;
     }
     else delay(200);
