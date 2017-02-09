@@ -138,7 +138,7 @@ void printData(bool complete) {
   Serial.flush();
 }
 
-void makePayload() {
+void makePayload(byte msgType) {
   uint8_t cap;
   if (syncSat != 0) {
     if (spd > 130 && alt > 1150) {
@@ -147,7 +147,7 @@ void makePayload() {
     }
     if (spd < 90) airPlaneSpeed = false;
 
-    if (alt > 4096) alt = (uint16_t)(alt / 16) + 3840; // 16m step after 4096m
+    if (alt > 4096 && msgType == MSG_POSITION) alt = (uint16_t)(alt / 16) + 3840; // 16m step after 4096m
     if (alt > 8191) alt = 8191;                        // 69632m is the new limit ;)
 
     if (spd > 127) spd = (uint16_t)(spd / 16) + 94;    // 16Km/h step after 127Km/h
