@@ -104,7 +104,7 @@ void checkRelease() {
     serialString(PSTR("New firmware. "));
     delay(6000);
     unsigned long previousMillis = millis();
-    HidnSeek.send(&p, sizeof(p),false);
+    HidnSeek.send(&p, sizeof(p));
     //Serial.println((uint16_t) (millis() - previousMillis));
     while ((uint16_t) (millis() - previousMillis) < 2000) delay(100);
   }
