@@ -75,12 +75,12 @@ enum {
 #define rxGPS            0     // PD0 RX Serial from GPS
 #define txGPS            1     // PD1 TX Serial to GPS
 #define usbDP            2     // PD2 Shutdown supply after power off
-#define accINT           3     // PB0 Accelerometer Interruption
+#define accINT           3     // PD3 Accelerometer Interruption
 #define usbDM            4     // PD4
 #define txSigfox         5     // PD5 TX Serial to Sigfox modem
 #define bluLEDpin        6     // PD6 Piezzo Output
 #define redLEDpin        7     // PD7 Red LED Status
-#define rxSigfox         8     // PD3 RX Serial from Sigfox modem
+#define rxSigfox         8     // PB0 RX Serial from Sigfox modem
 #define shdPin           9     // PB1 Shutdown pin
 #define rstPin          10     // PB2 SS   SDCARD
 //                      11     // PB3 MOSI SDCARD
