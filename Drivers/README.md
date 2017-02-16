@@ -48,3 +48,9 @@ Launch the software, connect the tracker and click on the install button. It wil
 ![alt zadig image](zadig.png)
 
 When you are ready, connect the tracker to the USB port and launch the command. If there is an error, unplug the tracker to avoid to repeat the power off procedure.
+
+### Reset manually the tracker
+
+Unplug the USB connector, open the tracker and make a short-cut between R and G pins like the above picture.
+
+![alt R and G picture hidnseek reset image](reset_R_G_pins.jpg)
