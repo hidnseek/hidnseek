@@ -29,3 +29,28 @@ The USBASP windows driver was previously based on libusb-win32. The certificate 
  [http://www.protostack.com/download/USBasp-win-driver-x86-x64-v3.0.7.zip] (http://www.protostack.com/download/USBasp-win-driver-x86-x64-v3.0.7.zip)
  
 This driver should work with version of Windows XP right through to 8.1 and the version 10 preview. (both 32 and 64 bit editions). Because the driver is signed, there should be no need to disable driver certificate enforcement or use Zadig.
+
+### Update Febuary 16 to upgrade the firmware with hex provided on the website
+
+first, power off the hidnSeek tracker (dance on manual page 16 or short circuit R&G pins)
+
+* On Windows 10, install the executable version of [Arduino IDE v1.8.x](http://www.arduino.cc/en/Main/Software)
+not the Windows App version.
+
+* install the driver from Zadig [http://zadig.akeo.ie/downloads/zadig_2.2.exe] (http://zadig.akeo.ie/downloads/zadig_2.2.exe)
+
+Launch the software, connect the tracker and click on the install button. It will detect the tracker and install correct drivers. Disconnect the tracker before Green LED start blinking, if it blink, power off again the tracker.
+
+* Open a command windows (Win+X), go in the C:\Users\Program Files(x86)\Arduino\hardware\tools\avr\bin and prepare the command as above with a respect of the path of the hex file:
+
+**avrdude -C ..\etc\avrdude.conf -p atmega328p -c usbasp -P usb -U flash:w:"C:\Users\[your path]\HidnSeek.hex":i**
+
+![alt zadig image](zadig.png)
+
+When you are ready, connect the tracker to the USB port and launch the command. If there is an error, unplug the tracker to avoid to repeat the power off procedure.
+
+### Reset manually the tracker
+
+Unplug the USB connector, open the tracker and make a short-cut between R and G pins like the above picture.
+
+![alt R and G picture hidnseek reset image](reset_R_G_pins.jpg)
