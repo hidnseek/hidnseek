@@ -51,7 +51,7 @@ $array['cap'] = ($cpx >> 10) & 3;
 // bat is battery percent remainning voltage
 $array['bat']=($cpx >> 3 ) & 0xff;
 
-/* mod is message type (MSG_POSITION = 0-3, MSG_NO_MOTION = 4,
+/* mod is message type (MSG_POSITION = 0-2, MSG_OPTION = 3, MSG_NO_MOTION = 4,
    MSG_NO_GPS = 5, MSG_MOTION_ALERT = 6, MSG_WEAK_BAT = 7) */
 $array['mod']=$cpx & 7;
 
