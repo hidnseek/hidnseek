@@ -1,7 +1,8 @@
-##Functionnal Diagram of HidnSeek firmware
+## Functionnal Diagram of HidnSeek firmware
+
 ![Functionnal Diagram](HidnSeek-dia.png)
 
-##php example code to decod SIGFOX Payload
+## php example code to decod SIGFOX Payload
 
 ```php
 /**************************************************************************************************
@@ -30,10 +31,6 @@ function hexTo32Integer($strHex) {
 
 $array = array();
 
-// mlat and mlon are latitude and longitude GPS coordonates
-$array['mlat']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),0,8));
-$array['mlon']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),8,8));
-
 // cpx is optionnal data
 $cpx=hexTo32Integer(substr(htmlspecialchars($_REQUEST["Payload"]),16,8));
 
@@ -54,6 +51,23 @@ $array['bat']=($cpx >> 3 ) & 0xff;
 /* mod is message type (MSG_POSITION = 0-3, MSG_NO_MOTION = 4,
    MSG_NO_GPS = 5, MSG_MOTION_ALERT = 6, MSG_WEAK_BAT = 7) */
 $array['mod']=$cpx & 7;
+
+// uncompress altitude field
+if ($array['alt'] > 4096 && $array['mod'] < 3) $array['alt'] = ($array['alt'] - 3840) * 16;
+
+if ($array['mod'] == 4 && $array['alt'] == 0) {
+  
+  // temp and press are temperature and pressure measured when no motion activity
+  $array['temp']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),0,8));
+  $array['press']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),8,8));
+
+} else {
+
+  // mlat and mlon are latitude and longitude GPS coordonates
+  $array['mlat']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),0,8));
+  $array['mlon']=hexTo32Float(substr(htmlspecialchars($_REQUEST["Payload"]),8,8));
+
+}
 
 header('Content-type: application/json');
 echo json_encode($array, JSON_PRETTY_PRINT);
