@@ -36,9 +36,8 @@ bool accelStatus() {
   if (accelPresent == false) return true;
 
   boolean accelMove = false;
-  byte error = accel.update();
 
-  if (error == 0) {
+  if (accel.update()) {
     accelMove = ((uint8_t)(abs((int8_t)(accel.getX() - x))) > ACCEL_SENS) ? true :
                 ((uint8_t)(abs((int8_t)(accel.getY() - y))) > ACCEL_SENS) ? true :
                 ((uint8_t)(abs((int8_t)(accel.getZ() - z))) > ACCEL_SENS) ? true : false;
@@ -46,6 +45,10 @@ bool accelStatus() {
     y = accel.getY();
     z = accel.getZ();
 
+    /** Debug acceleration axes **/
+    //Serial.print(x); Serial.print(" "); Serial.print(y); Serial.print(" "); Serial.print(z); Serial.println();
+    //Serial.flush();
+    
     if (accelMove) { // Compute accelDance on move
       byte newPosition;
       if      (abs(x) < ACCEL_FLAT && abs(y) < ACCEL_FLAT && z > ACCEL_TRIG) newPosition = POS_FACE_UP;
