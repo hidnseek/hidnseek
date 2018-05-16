@@ -19,10 +19,10 @@
           },
 	  "url": "https://www.hidnseek.fr/downloads/HidnSeek_1.0.0.tar.gz",
           "archiveFileName": "HidnSeek_1.0.0.tar.gz",
-          "checksum": "SHA-256:ca45bf390788b5ae9ab3646e259a2f544531ed3a98e51ea7baf69895b840caab",
-          "size": "7043",
+          "checksum": "SHA-256:88a34903d1e7667ca29f474bae58609b0214609f18e689f73b36d68f39bd2cfc",
+          "size": "7006",
           "boards": [
-            {"name": "ATmega328P"}
+            {"name": "HidnSeek SIGFOX/LoRa GPS Trackers"}
           ],
           "toolsDependencies": [
             {
