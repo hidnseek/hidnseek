@@ -1,26 +1,26 @@
 {
   "packages": [
     {
-      "name": "USBaspLoader",
+      "name": "HidnSeek",
       "maintainer": "HidnSeek",
-      "websiteURL": "https://github.com/hidnseek/hidnseek",
+      "websiteURL": "https://www.hidnseek.fr",
       "email": "contact@hidnseek.fr",
       "help": {
         "online": ""
       },
       "platforms": [
         {
-          "name": "USBaspLoader",
+          "name": "HidnSeek",
           "architecture": "avr",
-          "version": "1.0.1",
+          "version": "1.0.0",
           "category": "Contributed",
           "help": {
             "online": ""
           },
-	  "url": "https://hidnseek.github.io/hidnseek/USBaspLoader_1.0.1.tar.gz",
-          "archiveFileName": "USBaspLoader_1.0.1.tar.gz",
-          "checksum": "SHA-256:49dc8e2423fa278e61be793fea86234fa965041f9a3a4fc8391f92651631127f",
-          "size": "5101",
+	  "url": "https://www.hidnseek.fr/downloads/HidnSeek_1.0.0.tar.gz",
+          "archiveFileName": "HidnSeek_1.0.0.tar.gz",
+          "checksum": "SHA-256:ca45bf390788b5ae9ab3646e259a2f544531ed3a98e51ea7baf69895b840caab",
+          "size": "7043",
           "boards": [
             {"name": "ATmega328P"}
           ],
