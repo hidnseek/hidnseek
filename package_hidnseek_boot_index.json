@@ -19,8 +19,8 @@
           },
 	  "url": "https://www.hidnseek.fr/downloads/HidnSeek_1.0.2.tar.gz",
           "archiveFileName": "HidnSeek_1.0.2.tar.gz",
-          "checksum": "SHA-256:31f113a89ba8f1a8db31780023cd55e1d62e89961d930487b694e9ebb112c2da",
-          "size": "5875",
+          "checksum": "SHA-256:3a1532cb3d33d0399cfb8eb26d520bdb657d7786d82cefc0e82128c9e3ab661e",
+          "size": "5881",
           "boards": [
             {"name": "HidnSeek SIGFOX/LoRa GPS Trackers"}
           ],
