@@ -54,7 +54,7 @@ class MMA8653
 {
   public:
     MMA8653(uint8_t addr = MMA_8653_DEFAULT_ADDRESS);
-    void begin(bool highres = true, uint8_t scale = 2);
+    bool begin(bool highres = true, uint8_t scale = 2);
     float getXG();
     float getYG();
     float getZG();
