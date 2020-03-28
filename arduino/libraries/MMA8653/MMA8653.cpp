@@ -26,7 +26,7 @@ MMA8653::MMA8653(uint8_t addr)
 
 //begin private methods
 
-
+#define MMA_8653_WHOAMI 0x0D
 #define MMA_8653_CTRL_REG1 0x2A
 #define MMA_8653_CTRL_REG1_VALUE_ACTIVE 0x01
 #define MMA_8653_CTRL_REG1_VALUE_F_READ 0x02
@@ -197,7 +197,7 @@ float MMA8653::geta3d(float gx, float gy, float gz)
 
 float MMA8653::_getRho(float ax, float ay, float az)
 {
-  return geta3d(_xg,_yg,_zg);
+  return geta3d(ax,ay,az);
 }
 
 
@@ -222,7 +222,7 @@ float MMA8653::_getTheta(float ax, float ay, float az)
 
 
 //begin public methods
-void MMA8653::begin(bool highres, uint8_t scale)
+bool MMA8653::begin(bool highres, uint8_t scale)
 {
   _highres = highres;
   
@@ -235,7 +235,7 @@ void MMA8653::begin(bool highres, uint8_t scale)
     _step_factor *= 4;
 #endif
 
-  uint8_t wai = _read_register(0x0D); // Get Who Am I from the device.
+  uint8_t wai = _read_register(MMA_8653_WHOAMI); // Get Who Am I from the device.
   // return value for MMA8543Q is 0x3A
   
   Wire.beginTransmission(_addr); // Reset
@@ -260,6 +260,7 @@ void MMA8653::begin(bool highres, uint8_t scale)
     Wire.write((uint8_t)MMA_8653_2G_MODE);
   Wire.endTransmission();
   active();
+  return (wai == 0x5A || wai == 0x4A); // Return true if MMA8652 or MMA8653FC is connected
 }
 
 
@@ -293,17 +294,17 @@ float MMA8653::getZG()
   return _zg;
 }
 
-int8_t MMA8653::getX()
+int16_t MMA8653::getX()
 {
   return _x;
 }
 
-int8_t MMA8653::getY()
+int16_t MMA8653::getY()
 {
   return _y;
 }
 
-int8_t MMA8653::getZ()
+int16_t MMA8653::getZ()
 {
   return _z;
 }
@@ -324,10 +325,6 @@ float MMA8653::getTheta()
 {
   return _getTheta(_xg,_yg,_zg);
 }
-
-
-int16_t rx, ry, rz;
-
 
 byte MMA8653::update()
 {
@@ -388,10 +385,9 @@ bool MMA8653::setInterrupt(uint8_t type, uint8_t pin, bool on)
 	_write_register(0x2E, current_routing_value);
 }
 
-bool MMA8653::disableAllInterrupts()
+void MMA8653::disableAllInterrupts()
 {
-	_write_register(0x2D, 0);
+	_write_register(MMA_8653_CTRL_REG4, 0);
 }
 
 //end public methods
-

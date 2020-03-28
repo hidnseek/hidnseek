@@ -58,9 +58,9 @@ class MMA8653
     float getXG();
     float getYG();
     float getZG();
-    int8_t getX();
-    int8_t getY();
-    int8_t getZ();
+    int16_t getX();
+    int16_t getY();
+    int16_t getZ();
     float getRho();
     float getPhi();
     float getTheta();
@@ -71,7 +71,7 @@ class MMA8653
     
     // Interrupts
     bool setInterrupt(uint8_t type, uint8_t pin, bool on);
-    bool disableAllInterrupts();
+    void disableAllInterrupts();
     void initMotion();
     void standby();
     void active();
@@ -89,9 +89,9 @@ class MMA8653
     uint8_t _addr;
     uint8_t _stat;
     uint8_t _scale;
-    int8_t _x;
-    int8_t _y;
-    int8_t _z;
+    int16_t _x;
+    int16_t _y;
+    int16_t _z;
     float _step_factor;
     bool _highres;
     float _xg;
