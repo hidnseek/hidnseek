@@ -22,7 +22,7 @@
           "checksum": "SHA-256:bd5b4850f2d0d5e0e31fb8e466f403bef761748dcd703d690974a7668ba37ba7",
           "size": "5897",
           "boards": [
-            {"name": "HidnSeek SIGFOX/LoRa GPS Trackers"}
+            {"name": "HidnSeek SIGFOX/LoRa GPS Trackers v1.0.5"}
           ],
           "toolsDependencies": [
           ]
@@ -40,7 +40,7 @@
           "checksum": "SHA-256:c58588176c9c758c7f1ed486d826e69220d447470f30f331efaf051382760489",
           "size": "5931",
           "boards": [
-            {"name": "HidnSeek SIGFOX/LoRa GPS Trackers"}
+            {"name": "HidnSeek SIGFOX/LoRa GPS Trackers v1.0.4"}
           ],
           "toolsDependencies": [
             {
